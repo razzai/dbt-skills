@@ -344,6 +344,17 @@
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
         
+        .list-form-inputs {
+            display: flex;
+            gap: 8px;
+        }
+        .list-form-inputs input[type="text"] {
+            flex-grow: 1;
+        }
+        .list-form-inputs input[type="number"] {
+            width: 80px;
+        }
+
         textarea {
             resize: vertical;
             min-height: 80px;
@@ -454,12 +465,50 @@
             transform: translateX(24px);
         }
         
-        /* To-Do List Styles */
-        .todo-list ul {
+        /* Swiper Styles */
+        .swiper-container {
+            overflow: hidden;
+            width: 100%;
+        }
+        .swiper-track {
+            display: flex;
+            transition: transform 0.3s ease-in-out;
+        }
+        .swiper-panel {
+            width: 100%;
+            padding: 0 10px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+        .swiper-dots {
+            text-align: center;
+            margin-top: 16px;
+        }
+        .dot {
+            height: 12px;
+            width: 12px;
+            margin: 0 5px;
+            background-color: var(--neutral-color);
+            border-radius: 50%;
+            display: inline-block;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .dot.active {
+            background-color: var(--accent-color);
+        }
+        #action-journal-swiper-track { width: 200%; }
+        #action-journal-swiper-track > .swiper-panel { width: 50%; }
+        #list-swiper-track { width: 300%; }
+        #list-swiper-track > .swiper-panel { width: 33.333%; }
+
+
+        /* List Styles */
+        .list ul {
             list-style: none;
             padding: 0;
         }
-        .todo-list li {
+        .list li {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -468,21 +517,21 @@
             border-radius: 8px;
             margin-bottom: 8px;
         }
-        .todo-list li.completed {
+        .list li.completed {
             opacity: 0.6;
         }
-        .todo-list li.completed span {
+        .list li.completed span {
             text-decoration: line-through;
         }
-        .todo-list li span {
+        .list li span {
             flex-grow: 1;
         }
-        .todo-list input[type="checkbox"] {
+        .list input[type="checkbox"] {
             width: 20px;
             height: 20px;
             cursor: pointer;
         }
-        .todo-delete-btn {
+        .list-delete-btn {
             background: var(--delete-button);
             color: white;
             border: none;
@@ -493,8 +542,41 @@
             font-weight: bold;
             line-height: 24px;
         }
-        .todo-delete-btn:hover {
+        .list-delete-btn:hover {
             background: var(--delete-hover);
+        }
+        #view-all-completed-btn {
+            margin-top: 16px;
+        }
+        
+        .journal-prompt {
+            font-style: italic;
+            margin-bottom: 16px;
+            padding: 12px;
+            background-color: var(--accent-light);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 4px;
+        }
+        
+        .backup-restore-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+        
+        #backup-reminder {
+            display: none;
+            padding: 16px;
+            background-color: var(--accent-light);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--accent-color);
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        #backup-reminder-buttons {
+            display: flex;
+            gap: 12px;
         }
 
         @media (max-width: 700px) {
@@ -560,6 +642,15 @@
             </label>
         </div>
     </div>
+    
+    <div id="backup-reminder">
+        <p>It's been a while since your last backup. Would you like to save your progress now?</p>
+        <div id="backup-reminder-buttons">
+            <button class="button" id="backup-reminder-btn">Backup Now</button>
+            <button class="button" id="dismiss-reminder-btn">Dismiss</button>
+        </div>
+    </div>
+
     <p class="points-display" id="points-display">Points: 0</p>
 
     <!-- Affirmation Section -->
@@ -614,16 +705,34 @@
         <button class="button" id="log-session" style="margin-top: 16px;">Log Session</button>
     </div>
 
-    <!-- Custom Action Section -->
-    <div class="card custom-action">
-        <h2>Log a Custom Action</h2>
-        <form id="custom-action-form">
-            <p>What did you do?</p>
-            <input type="text" id="custom-action-name" placeholder="E.g., Took a walk" required>
-            <p>Add some notes:</p>
-            <textarea id="custom-action-notes" placeholder="Any thoughts..."></textarea>
-            <button class="button" type="submit">Log Custom Action</button>
-        </form>
+    <!-- Action & Journal Section -->
+    <div class="card">
+        <h2 id="action-journal-title">Log a Custom Action</h2>
+        <div id="action-journal-swiper" class="swiper-container" data-title-id="action-journal-title">
+            <div id="action-journal-swiper-track" class="swiper-track">
+                <!-- Panel 1: Custom Action -->
+                <div class="swiper-panel">
+                    <form id="custom-action-form">
+                        <p>What did you do?</p>
+                        <input type="text" id="custom-action-name" placeholder="E.g., Took a walk" required>
+                        <p>Add some notes:</p>
+                        <textarea id="custom-action-notes" placeholder="Any thoughts..."></textarea>
+                        <button class="button" type="submit">Log Custom Action</button>
+                    </form>
+                </div>
+                <!-- Panel 2: Journal -->
+                <div class="swiper-panel">
+                    <h3>Daily Stoic Journal</h3>
+                    <p id="journal-prompt" class="journal-prompt"></p>
+                    <textarea id="journal-entry" rows="6" placeholder="Your reflections..."></textarea>
+                    <button class="button" id="save-journal-btn" style="width:100%; margin-top: 8px;">Save Journal Entry</button>
+                </div>
+            </div>
+        </div>
+        <div id="action-journal-dots" class="swiper-dots">
+            <span class="dot active" data-index="0"></span>
+            <span class="dot" data-index="1"></span>
+        </div>
     </div>
 
     <!-- Reward System Section -->
@@ -639,19 +748,58 @@
         </div>
     </div>
 
-    <!-- To-Do List Section -->
-    <div class="card todo-list">
-        <h2>To-Do List</h2>
-        <form id="todo-form">
-            <input type="text" id="todo-input" placeholder='E.g., "Wash one dish" or "Open email"' required>
-            <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Task</button>
-        </form>
-        
-        <h3>To Do</h3>
-        <ul id="pending-tasks"></ul>
-        
-        <h3>Completed</h3>
-        <ul id="completed-tasks"></ul>
+    <!-- Lists Section (Swiper) -->
+    <div class="card list">
+        <h2 id="list-title">To-Do List</h2>
+        <div id="list-swiper" class="swiper-container" data-title-id="list-title">
+            <div id="list-swiper-track" class="swiper-track">
+                <!-- Panel 1: To-Do List -->
+                <div class="swiper-panel">
+                    <form id="todo-form">
+                        <div class="list-form-inputs">
+                            <input type="text" id="todo-input" placeholder='E.g., "Wash one dish"' required>
+                            <input type="number" id="todo-points" placeholder="10" min="0">
+                        </div>
+                        <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Task</button>
+                    </form>
+                    <h3>To Do</h3>
+                    <ul id="pending-tasks"></ul>
+                    <h3>Completed (Last 10)</h3>
+                    <ul id="completed-tasks"></ul>
+                    <button class="button" id="view-all-completed-btn" style="display:none;">View All Completed</button>
+                </div>
+                <!-- Panel 2: Goals -->
+                <div class="swiper-panel">
+                    <form id="goal-form">
+                        <div class="list-form-inputs">
+                            <input type="text" id="goal-input" placeholder='E.g., "Practice mindfulness for 5 mins"' required>
+                            <input type="number" id="goal-points" placeholder="15" min="0">
+                        </div>
+                        <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Goal</button>
+                    </form>
+                    <h3>In Progress</h3>
+                    <ul id="pending-goals"></ul>
+                    <h3>Achieved</h3>
+                    <ul id="completed-goals"></ul>
+                </div>
+                <!-- Panel 3: Grocery List -->
+                <div class="swiper-panel">
+                    <form id="grocery-form">
+                        <input type="text" id="grocery-input" placeholder='E.g., "Apples"' required>
+                        <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Item</button>
+                    </form>
+                    <h3>Needed</h3>
+                    <ul id="pending-groceries"></ul>
+                    <h3>In Cart</h3>
+                    <ul id="completed-groceries"></ul>
+                </div>
+            </div>
+        </div>
+        <div id="list-swiper-dots" class="swiper-dots">
+            <span class="dot active" data-index="0"></span>
+            <span class="dot" data-index="1"></span>
+            <span class="dot" data-index="2"></span>
+        </div>
     </div>
 
 
@@ -675,6 +823,17 @@
             </table>
         </div>
         <button class="button" id="download-history">Download History (CSV)</button>
+    </div>
+
+    <!-- Backup & Restore Section -->
+    <div class="card">
+        <h2>Backup & Restore</h2>
+        <p>Save your progress to a file or restore it from a backup.</p>
+        <div class="backup-restore-buttons">
+            <button class="button" id="backup-data-btn">Backup Data</button>
+            <button class="button" id="restore-data-btn">Restore Data</button>
+            <input type="file" id="restore-file-input" style="display: none;" accept=".json">
+        </div>
     </div>
 </div>
 
@@ -715,31 +874,69 @@ document.addEventListener('DOMContentLoaded', () => {
     const newRewardNameInput = document.getElementById('new-reward-name');
     const newRewardCostInput = document.getElementById('new-reward-cost');
     const rewardsList = document.getElementById('rewards-list');
+    
+    // List Swiper Elements
+    const listTitle = document.getElementById('list-title');
+    const listSwiperContainer = document.getElementById('list-swiper');
+    const listSwiperTrack = document.getElementById('list-swiper-track');
+    const listSwiperDots = document.querySelectorAll('#list-swiper-dots .dot');
     const todoForm = document.getElementById('todo-form');
     const todoInput = document.getElementById('todo-input');
+    const todoPointsInput = document.getElementById('todo-points');
     const pendingTasksList = document.getElementById('pending-tasks');
     const completedTasksList = document.getElementById('completed-tasks');
+    const viewAllCompletedBtn = document.getElementById('view-all-completed-btn');
+    const goalForm = document.getElementById('goal-form');
+    const goalInput = document.getElementById('goal-input');
+    const goalPointsInput = document.getElementById('goal-points');
+    const pendingGoalsList = document.getElementById('pending-goals');
+    const completedGoalsList = document.getElementById('completed-goals');
+    const groceryForm = document.getElementById('grocery-form');
+    const groceryInput = document.getElementById('grocery-input');
+    const pendingGroceriesList = document.getElementById('pending-groceries');
+    const completedGroceriesList = document.getElementById('completed-groceries');
+    
+    // Action/Journal Swiper Elements
+    const actionJournalTitle = document.getElementById('action-journal-title');
+    const actionJournalSwiperContainer = document.getElementById('action-journal-swiper');
+    const actionJournalSwiperTrack = document.getElementById('action-journal-swiper-track');
+    const actionJournalSwiperDots = document.querySelectorAll('#action-journal-dots .dot');
+    const journalPromptEl = document.getElementById('journal-prompt');
+    const journalEntryInput = document.getElementById('journal-entry');
+    const saveJournalBtn = document.getElementById('save-journal-btn');
+
+    // Backup & Restore Elements
+    const backupBtn = document.getElementById('backup-data-btn');
+    const restoreBtn = document.getElementById('restore-data-btn');
+    const restoreFileInput = document.getElementById('restore-file-input');
+    const backupReminder = document.getElementById('backup-reminder');
+    const backupReminderBtn = document.getElementById('backup-reminder-btn');
+    const dismissReminderBtn = document.getElementById('dismiss-reminder-btn');
 
     let selectedTool = null;
     let sessionHistory = [];
     let rewards = [];
-    let todoList = [];
+    let todoList = [], goalsList = [], groceryList = [];
     let totalPoints = 0;
     let isBreathing = false;
     let breathingIntervalId = null;
     let breathingCycleCount = 0;
+
     const historyStorageKey = 'dbt-companion-history';
     const rewardsStorageKey = 'dbt-companion-rewards';
     const pointsStorageKey = 'dbt-companion-points';
     const themeStorageKey = 'dbt-companion-theme';
     const todoStorageKey = 'dbt-companion-todo';
+    const goalsStorageKey = 'dbt-companion-goals';
+    const groceryStorageKey = 'dbt-companion-grocery';
+    const lastBackupStorageKey = 'dbt-companion-last-backup';
 
-    // --- Data (will be populated later) ---
     const dbtTools = {};
     const dbtToolGuides = {};
     const affirmations = [];
+    const stoicPrompts = [];
 
-    // --- Three.js Breathing Animation Variables ---
+    // --- Three.js Variables ---
     let scene, camera, renderer, sphere;
     let breathingPhase = 'hold_small'; 
     let phaseProgress = 0; 
@@ -760,6 +957,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loadTheme();
         loadData();
         initThreeJS();
+        displayDailyPrompt();
+        checkBackupReminder();
         attachEventListeners();
     }
 
@@ -819,10 +1018,12 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionHistory = JSON.parse(localStorage.getItem(historyStorageKey)) || [];
         rewards = JSON.parse(localStorage.getItem(rewardsStorageKey)) || [];
         todoList = JSON.parse(localStorage.getItem(todoStorageKey)) || [];
+        goalsList = JSON.parse(localStorage.getItem(goalsStorageKey)) || [];
+        groceryList = JSON.parse(localStorage.getItem(groceryStorageKey)) || [];
         totalPoints = parseInt(localStorage.getItem(pointsStorageKey), 10) || 0;
         renderHistory();
         renderRewards();
-        renderTodoList();
+        renderAllLists();
         updatePointsDisplay();
     }
     
@@ -831,6 +1032,8 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem(rewardsStorageKey, JSON.stringify(rewards));
         localStorage.setItem(pointsStorageKey, totalPoints);
         localStorage.setItem(todoStorageKey, JSON.stringify(todoList));
+        localStorage.setItem(goalsStorageKey, JSON.stringify(goalsList));
+        localStorage.setItem(groceryStorageKey, JSON.stringify(groceryList));
     }
     
     function updatePointsDisplay() {
@@ -840,6 +1043,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculateScore(tool, before, after) {
         let baseScore = 50;
         if (tool === 'Box Breathing') baseScore = 25;
+        if (tool === 'Journal Entry') baseScore = 25;
         const emotionBonus = Math.max(0, after - before);
         return baseScore + emotionBonus;
     }
@@ -891,24 +1095,48 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.delete-reward-button').forEach(b => b.addEventListener('click', deleteReward));
     }
 
-    function renderTodoList() {
-        pendingTasksList.innerHTML = '';
-        completedTasksList.innerHTML = '';
-        todoList.forEach(task => {
-            const taskItem = document.createElement('li');
-            taskItem.dataset.id = task.id;
-            taskItem.innerHTML = `
-                <input type="checkbox" ${task.completed ? 'checked' : ''}>
-                <span>${task.text}</span>
-                <button class="todo-delete-btn">X</button>
-            `;
-            if (task.completed) {
-                taskItem.classList.add('completed');
-                completedTasksList.appendChild(taskItem);
-            } else {
-                pendingTasksList.appendChild(taskItem);
-            }
+    function renderAllLists() {
+        renderList(pendingTasksList, completedTasksList, todoList, true);
+        renderList(pendingGoalsList, completedGoalsList, goalsList, false);
+        renderList(pendingGroceriesList, completedGroceriesList, groceryList, false);
+    }
+
+    function renderList(pendingUl, completedUl, list, isTodoList) {
+        pendingUl.innerHTML = '';
+        completedUl.innerHTML = '';
+        
+        const pending = list.filter(item => !item.completed);
+        const completed = list.filter(item => item.completed)
+                              .sort((a, b) => new Date(b.completionTimestamp) - new Date(a.completionTimestamp));
+
+        pending.forEach(item => {
+            const li = createListItem(item);
+            pendingUl.appendChild(li);
         });
+
+        const itemsToShow = isTodoList ? completed.slice(0, 10) : completed;
+        itemsToShow.forEach(item => {
+            const li = createListItem(item);
+            completedUl.appendChild(li);
+        });
+
+        if (isTodoList) {
+            viewAllCompletedBtn.style.display = completed.length > 10 ? 'block' : 'none';
+        }
+    }
+
+    function createListItem(item) {
+        const li = document.createElement('li');
+        li.dataset.id = item.id;
+        li.innerHTML = `
+            <input type="checkbox" ${item.completed ? 'checked' : ''}>
+            <span>${item.text} ${item.points ? `(${item.points} pts)` : ''}</span>
+            <button class="list-delete-btn">X</button>
+        `;
+        if (item.completed) {
+            li.classList.add('completed');
+        }
+        return li;
     }
     
     // --- Event Handlers ---
@@ -1126,38 +1354,195 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function handleTodoSubmit(event) {
+    function handleListSubmit(event, list, input, pointsInput, defaultPoints) {
         event.preventDefault();
-        const text = todoInput.value.trim();
+        const text = input.value.trim();
         if (text) {
-            todoList.push({ text, completed: false, id: Date.now() });
+            const points = (pointsInput && parseInt(pointsInput.value)) || defaultPoints;
+            list.push({ text, completed: false, id: Date.now(), points });
             saveData();
-            renderTodoList();
-            todoInput.value = '';
+            renderAllLists();
+            input.value = '';
+            if (pointsInput) pointsInput.value = '';
         }
     }
     
-    function handleTodoListClick(event) {
+    function handleListClick(event, list) {
         const target = event.target;
         const taskItem = target.closest('li');
         if (!taskItem) return;
         
         const taskId = Number(taskItem.dataset.id);
-        const task = todoList.find(t => t.id === taskId);
+        const task = list.find(t => t.id === taskId);
 
         if (target.type === 'checkbox') {
+            const wasCompleted = task.completed;
             task.completed = target.checked;
-            if (task.completed) {
-                totalPoints += 10;
-                updatePointsDisplay();
-                showMessage("Task complete! You earned 10 points!");
+            if (task.completed && !wasCompleted) {
+                task.completionTimestamp = new Date().toISOString();
+                if (task.points > 0) {
+                    totalPoints += task.points;
+                    updatePointsDisplay();
+                    showMessage(`Item complete! You earned ${task.points} points!`);
+                }
             }
             saveData();
-            renderTodoList();
-        } else if (target.classList.contains('todo-delete-btn')) {
-            todoList = todoList.filter(t => t.id !== taskId);
+            renderAllLists();
+        } else if (target.classList.contains('list-delete-btn')) {
+            const listIndex = list.findIndex(t => t.id === taskId);
+            list.splice(listIndex, 1);
             saveData();
-            renderTodoList();
+            renderAllLists();
+        }
+    }
+
+    function showAllCompletedModal() {
+        const completedTasks = todoList.filter(task => task.completed)
+                                     .sort((a, b) => new Date(b.completionTimestamp) - new Date(a.completionTimestamp));
+        
+        const groupedByDate = completedTasks.reduce((acc, task) => {
+            const date = new Date(task.completionTimestamp).toLocaleDateString();
+            if (!acc[date]) {
+                acc[date] = [];
+            }
+            acc[date].push(task);
+            return acc;
+        }, {});
+
+        let modalContent = '<h2>All Completed Tasks</h2>';
+        for (const date in groupedByDate) {
+            modalContent += `<h3>${date}</h3><ul>`;
+            groupedByDate[date].forEach(task => {
+                modalContent += `<li>${task.text}</li>`;
+            });
+            modalContent += '</ul>';
+        }
+        showMessage(modalContent, true);
+    }
+
+    function setupSwiper(container, track, dots, numPanels, titleEl) {
+        let currentIndex = 0;
+        let touchStartX = 0;
+        const titles = {
+            'list-title': ["To-Do List", "Goals", "Grocery List"],
+            'action-journal-title': ["Log a Custom Action", "Daily Stoic Journal"]
+        };
+
+        function goToPanel(index) {
+            currentIndex = index;
+            track.style.transform = `translateX(-${index * 100 / numPanels}%)`;
+            if (titleEl) {
+                titleEl.textContent = titles[titleEl.id][index];
+            }
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+        }
+
+        function handleTouchStart(e) { touchStartX = e.changedTouches[0].screenX; }
+        function handleTouchEnd(e) {
+            const touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX < touchStartX - 50 && currentIndex < numPanels - 1) {
+                goToPanel(currentIndex + 1);
+            }
+            if (touchEndX > touchStartX + 50 && currentIndex > 0) {
+                goToPanel(currentIndex - 1);
+            }
+        }
+
+        dots.forEach(dot => dot.addEventListener('click', () => goToPanel(Number(dot.dataset.index))));
+        container.addEventListener('touchstart', handleTouchStart);
+        container.addEventListener('touchend', handleTouchEnd);
+    }
+
+    function displayDailyPrompt() {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        const dayOfYear = Math.floor(diff / oneDay);
+        const promptIndex = dayOfYear % stoicPrompts.length;
+        journalPromptEl.innerHTML = stoicPrompts[promptIndex];
+    }
+
+    function saveJournalEntry() {
+        const entryText = journalEntryInput.value.trim();
+        if (!entryText) {
+            showMessage("Please write something in your journal before saving.");
+            return;
+        }
+        const promptText = journalPromptEl.textContent;
+        const fullNotes = `Prompt: ${promptText}\n\nEntry: ${entryText}`;
+        const score = 25;
+        totalPoints += score;
+        sessionHistory.unshift({
+            tool: 'Journal Entry',
+            beforeEmotion: '-', afterEmotion: '-', score,
+            notes: fullNotes,
+            timestamp: new Date().toISOString()
+        });
+        saveData();
+        renderHistory();
+        updatePointsDisplay();
+        showMessage(`Journal entry saved! You earned ${score} points.`);
+        journalEntryInput.value = '';
+    }
+
+    function backupData() {
+        const dataToBackup = {
+            sessionHistory, rewards, todoList, goalsList, groceryList, totalPoints,
+        };
+        const blob = new Blob([JSON.stringify(dataToBackup, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'dbt_companion_backup.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        localStorage.setItem(lastBackupStorageKey, new Date().toISOString());
+        backupReminder.style.display = 'none';
+        showMessage("Backup file created!");
+    }
+
+    function restoreData() {
+        restoreFileInput.click();
+    }
+
+    function handleRestoreFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                sessionHistory = data.sessionHistory || [];
+                rewards = data.rewards || [];
+                todoList = data.todoList || [];
+                goalsList = data.goalsList || [];
+                groceryList = data.groceryList || [];
+                totalPoints = data.totalPoints || 0;
+                
+                saveData();
+                loadData(); // Reload all data and re-render the UI
+                showMessage("Data restored successfully!");
+            } catch (error) {
+                showMessage("Error: Could not parse the backup file. It may be corrupted.");
+            }
+        };
+        reader.readAsText(file);
+    }
+    
+    function checkBackupReminder() {
+        if (sessionStorage.getItem('backupReminderDismissed') === 'true') {
+            return;
+        }
+        const lastBackupTimestamp = localStorage.getItem(lastBackupStorageKey);
+        if (!lastBackupTimestamp) {
+            backupReminder.style.display = 'flex';
+            return;
+        }
+        const hoursSinceBackup = (new Date() - new Date(lastBackupTimestamp)) / (1000 * 60 * 60);
+        if (hoursSinceBackup > 24) {
+            backupReminder.style.display = 'flex';
         }
     }
 
@@ -1185,9 +1570,34 @@ document.addEventListener('DOMContentLoaded', () => {
         affirmationFace.addEventListener('click', showAffirmation);
         toggleBreathingButton.addEventListener('click', toggleBreathing);
         addRewardForm.addEventListener('submit', addReward);
-        todoForm.addEventListener('submit', handleTodoSubmit);
-        pendingTasksList.addEventListener('click', handleTodoListClick);
-        completedTasksList.addEventListener('click', handleTodoListClick);
+        saveJournalBtn.addEventListener('click', saveJournalEntry);
+        
+        // List Listeners
+        todoForm.addEventListener('submit', (e) => handleListSubmit(e, todoList, todoInput, todoPointsInput, 10));
+        goalForm.addEventListener('submit', (e) => handleListSubmit(e, goalsList, goalInput, goalPointsInput, 15));
+        groceryForm.addEventListener('submit', (e) => handleListSubmit(e, groceryList, groceryInput, null, 0));
+        
+        pendingTasksList.addEventListener('click', (e) => handleListClick(e, todoList));
+        completedTasksList.addEventListener('click', (e) => handleListClick(e, todoList));
+        pendingGoalsList.addEventListener('click', (e) => handleListClick(e, goalsList));
+        completedGoalsList.addEventListener('click', (e) => handleListClick(e, goalsList));
+        pendingGroceriesList.addEventListener('click', (e) => handleListClick(e, groceryList));
+        completedGroceriesList.addEventListener('click', (e) => handleListClick(e, groceryList));
+        viewAllCompletedBtn.addEventListener('click', showAllCompletedModal);
+
+        // Swiper Setup
+        setupSwiper(listSwiperContainer, listSwiperTrack, listSwiperDots, 3, listTitle);
+        setupSwiper(actionJournalSwiperContainer, actionJournalSwiperTrack, actionJournalSwiperDots, 2, actionJournalTitle);
+
+        // Backup & Restore Listeners
+        backupBtn.addEventListener('click', backupData);
+        restoreBtn.addEventListener('click', restoreData);
+        restoreFileInput.addEventListener('change', handleRestoreFile);
+        backupReminderBtn.addEventListener('click', backupData);
+        dismissReminderBtn.addEventListener('click', () => {
+            backupReminder.style.display = 'none';
+            sessionStorage.setItem('backupReminderDismissed', 'true');
+        });
     }
 
     function populateData() {
@@ -1220,6 +1630,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         affirmations.push(...[
             "Your feelings are valid, no matter what they are.", "It's okay to need a break. You are not lazy.", "Your unique way of processing the world is a strength.", "You are worthy of love and acceptance just as you are.", "Sensory overload is a real thing, and it's okay to step away.", "Your intuition about what you need is powerful. Listen to it.", "You don't have to 'mask' to be loved or valued.", "Progress isn't always linear, and that's perfectly normal.", "Your brain works differently, and that's a beautiful thing.", "Rest is productive. Your body and mind need it.", "You are not broken. You are a complete, whole person."
+        ]);
+        stoicPrompts.push(...[
+            "What is truly within my control today, and what is not? How can I focus my energy only on what I can control?",
+            "Reflect on an obstacle you faced recently. How can you view it not as a barrier, but as an opportunity to practice a virtue like patience, courage, or wisdom?",
+            "If this were my last day on Earth, how would I choose to act? What would I prioritize and what would I let go of?",
+            "What external events disturbed my peace today? Why did I grant them that power over my inner tranquility?",
+            "Which of the four Stoic virtues (Wisdom, Courage, Justice, Temperance) did I embody today? Where did I have an opportunity to practice one but fell short?",
+            "Consider someone who frustrates you. Can you try to understand their perspective, not to excuse their actions, but to free yourself from anger?",
+            "What is one thing I can do today to prepare for future challenges, making my future self more resilient? (Premeditatio Malorum)",
+            "Reflect on something you often take for granted (your health, a relationship, a simple comfort). Spend a moment in genuine gratitude for it.",
+            "What is an opinion or judgment I held today that caused me distress? Can I let it go and simply accept the facts of the situation?",
+            "How can I act with kindness and justice toward my community and the people I interact with today?",
+            "What is one desire I can willingly let go of today, to practice indifference to external things?",
+            "Reflect on a past failure. What lesson did it teach me, and how has it made me stronger?",
+            "Consider the vastness of time and space. How does this 'view from above' change the perspective on my current problems?",
+            "What is a simple pleasure I experienced today? How can I find more joy in ordinary moments?",
+            "Did I speak with purpose today, or did I engage in idle gossip or complain? How can I improve my words tomorrow?",
+            "How did I respond to an unexpected event today? Did I react with emotion, or did I pause and choose a virtuous response?",
+            "What aspect of nature did I notice today? How does it remind me of the natural order and flow of life?",
+            "Am I living in accordance with my own values? Where is there a gap between what I believe and how I act?",
+            "What is one small step I can take today to become a better version of myself?",
+            "Consider your own mortality (Memento Mori). How does remembering that life is finite clarify what is truly important?",
+            "What is a fear that is holding me back? What is the worst that could happen, and could I endure it?",
+            "Did I contribute to the common good today, even in a small way?",
+            "What is an impression I had today that I should have examined more closely before accepting it as true?",
+            "How can I practice 'Amor Fati' (love of fate) and embrace everything that happened today, both good and bad, as part of my path?",
+            "Where did I waste time today on things that are trivial or outside my control?",
+            "What is one physical comfort I can do without for a short period, to build my resilience and appreciate it more?",
+            "Think of a role model. How would they have handled the challenges I faced today?",
+            "What is a commitment I made? Am I honoring it with my actions?",
+            "How can I be a source of tranquility and reason for those around me today?",
+            "At the end of the day, what did I learn about myself?"
         ]);
     }
 
