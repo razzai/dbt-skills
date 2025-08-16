@@ -7,12 +7,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
+            /* Light Mode (Default) */
             --bg-color: #f0f4f8;
             --container-bg: #ffffff;
+            --card-bg: #f7fafc;
             --text-color: #334e68;
+            --heading-color: #102a43;
             --accent-color: #5d9cec;
             --accent-light: #e6f0ff;
             --button-bg: #7cb9e8;
@@ -22,8 +26,28 @@
             --delete-button: #e87c7c;
             --delete-hover: #c45b5b;
             --neutral-color: #bcccdc;
+            --border-color: #e0e6ed;
             --border-radius: 12px;
             --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        body.dark-mode {
+            /* Dark Mode */
+            --bg-color: #1a202c;
+            --container-bg: #2d3748;
+            --card-bg: #4a5568;
+            --text-color: #e2e8f0;
+            --heading-color: #f7fafc;
+            --accent-color: #63b3ed;
+            --accent-light: #2c5282;
+            --button-bg: #4299e1;
+            --button-hover: #63b3ed;
+            --affirmation-bg: #9f7aea;
+            --affirmation-hover: #805ad5;
+            --delete-button: #f56565;
+            --delete-hover: #c53030;
+            --neutral-color: #718096;
+            --border-color: #4a5568;
         }
 
         body {
@@ -38,6 +62,7 @@
             padding: 20px;
             box-sizing: border-box;
             line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
@@ -50,12 +75,21 @@
             display: flex;
             flex-direction: column;
             gap: 24px;
+            transition: background-color 0.3s;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         h1, h2 {
             text-align: center;
             margin: 0;
             font-weight: 700;
+            color: var(--heading-color);
+            transition: color 0.3s;
         }
 
         h1 {
@@ -64,16 +98,17 @@
         }
 
         h2 {
-            color: var(--text-color);
             font-size: 1.5rem;
             margin-bottom: 16px;
         }
 
         .card {
-            background-color: var(--bg-color);
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
             padding: 24px;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .points-display {
@@ -82,6 +117,7 @@
             font-weight: 700;
             color: var(--affirmation-bg);
             margin-bottom: 24px;
+            transition: color 0.3s;
         }
         
         .tool-selection, .emotion-check, .custom-action, .history-log, .reward-system {
@@ -110,14 +146,21 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
+        
+        .button:disabled {
+            background-color: var(--neutral-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 
-        .tool-button:hover, .button:hover, .breathing-button:hover, .specific-tool-button:hover, .add-reward-button:hover {
+        .tool-button:hover, .button:not(:disabled):hover, .breathing-button:hover, .specific-tool-button:hover, .add-reward-button:hover {
             background-color: var(--button-hover);
             transform: translateY(-2px);
             box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
         }
 
-        .tool-button:active, .button:active, .breathing-button:active, .specific-tool-button:active, .add-reward-button:active {
+        .tool-button:active, .button:not(:disabled):active, .breathing-button:active, .specific-tool-button:active, .add-reward-button:active {
             transform: translateY(0);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
@@ -222,13 +265,10 @@
             text-align: center;
         }
 
-        .breathing-box {
-            width: 150px;
-            height: 150px;
-            background: var(--accent-color);
-            border-radius: var(--border-radius);
-            opacity: 0.8;
-            transition: transform 0.1s;
+        #breathing-canvas {
+            width: 200px;
+            height: 200px;
+            cursor: pointer;
         }
 
         .breathing-message {
@@ -280,9 +320,12 @@
             width: 100%;
             padding: 12px;
             border-radius: var(--border-radius);
-            border: 1px solid var(--neutral-color);
+            border: 1px solid var(--border-color);
             box-sizing: border-box;
             font-family: inherit;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
         
         textarea {
@@ -299,16 +342,12 @@
         .history-log th, .history-log td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid var(--neutral-color);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .history-log th {
             background-color: var(--accent-light);
             font-weight: 700;
-        }
-
-        .history-log tr:last-child td {
-            border-bottom: none;
         }
 
         .history-log-message {
@@ -351,34 +390,59 @@
         .message-box-text {
             font-weight: 500;
             font-size: 1.1rem;
+            text-align: left;
         }
         
-        @keyframes box-breathing {
-            0% { transform: scale(1); border-radius: 12px; }
-            25% { transform: scale(1.2); border-radius: 12px; } /* Inhale */
-            50% { transform: scale(1.2); border-radius: 50%; } /* Hold */
-            75% { transform: scale(1); border-radius: 50%; } /* Exhale */
-            100% { transform: scale(1); border-radius: 12px; } /* Hold */
+        /* Dark Mode Toggle Switch */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        .theme-switch {
+            display: inline-block;
+            height: 24px;
+            position: relative;
+            width: 48px;
+        }
+        .theme-switch input {
+            display:none;
+        }
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 16px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 16px;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
         }
         
-        .breathing-box.animate {
-            animation: box-breathing 16s infinite;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                padding: 20px;
-            }
-            .tool-buttons, .specific-tool-buttons {
-                flex-direction: column;
-            }
-            .tool-button, .specific-tool-button {
-                width: 100%;
-            }
-            .history-log table, .history-log th, .history-log td {
+        @media (max-width: 700px) {
+            .history-log table, 
+            .history-log thead, 
+            .history-log tbody, 
+            .history-log th, 
+            .history-log td, 
+            .history-log tr {
                 display: block;
             }
 
@@ -387,27 +451,38 @@
             }
 
             .history-log tr {
-                margin-bottom: 12px;
-                border: 1px solid var(--neutral-color);
+                border: 1px solid var(--border-color);
                 border-radius: var(--border-radius);
-                display: block;
-                padding: 12px;
+                margin-bottom: 1rem;
+                background-color: var(--container-bg);
             }
 
             .history-log td {
-                text-align: right;
+                border: none;
+                border-bottom: 1px solid var(--border-color);
                 position: relative;
                 padding-left: 50%;
-                border: none;
+                text-align: right;
+                min-height: 2.5em;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+            }
+            
+            .history-log tr td:last-child {
+                border-bottom: none;
             }
 
             .history-log td::before {
                 content: attr(data-label);
                 position: absolute;
-                left: 10px;
-                width: calc(50% - 20px);
+                left: 12px;
+                width: calc(50% - 24px);
+                padding-right: 10px;
+                white-space: nowrap;
                 text-align: left;
                 font-weight: bold;
+                color: var(--heading-color);
             }
         }
     </style>
@@ -415,7 +490,15 @@
 <body>
 
 <div class="container">
-    <h1>My DBT Companion</h1>
+    <div class="header-container">
+        <h1>My DBT Companion</h1>
+        <div class="theme-switch-wrapper">
+            <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" />
+                <div class="slider round"></div>
+            </label>
+        </div>
+    </div>
     <p class="points-display" id="points-display">Points: 0</p>
 
     <!-- Affirmation Section -->
@@ -428,9 +511,9 @@
     <!-- Box Breathing Section -->
     <div class="card box-breathing">
         <h2>Box Breathing</h2>
-        <div class="breathing-box" id="breathing-box"></div>
+        <canvas id="breathing-canvas"></canvas>
         <p class="breathing-message" id="breathing-message">Click below to begin.</p>
-        <button class="breathing-button" id="start-breathing">Start Breathing</button>
+        <button class="breathing-button" id="toggle-breathing-button">Start Breathing</button>
     </div>
 
     <!-- Main Tool/Emotion Logging Section -->
@@ -448,9 +531,8 @@
         
         <div class="specific-tools-section" id="specific-tools-section">
             <p>2. Select the specific tool you used:</p>
-            <div class="specific-tool-buttons" id="specific-tool-buttons">
-                <!-- Specific tool buttons will be dynamically inserted here -->
-            </div>
+            <div class="specific-tool-buttons" id="specific-tool-buttons"></div>
+            <button class="button" id="show-guide-button" disabled>Show Guide</button>
         </div>
 
         <div class="emotion-check">
@@ -474,9 +556,9 @@
         <h2>Log a Custom Action</h2>
         <form id="custom-action-form">
             <p>What did you do?</p>
-            <input type="text" id="custom-action-name" placeholder="E.g., Took a walk, wrote in my journal" required>
+            <input type="text" id="custom-action-name" placeholder="E.g., Took a walk" required>
             <p>Add some notes:</p>
-            <textarea id="custom-action-notes" placeholder="Any thoughts, feelings, or observations..."></textarea>
+            <textarea id="custom-action-notes" placeholder="Any thoughts..."></textarea>
             <button class="button" type="submit">Log Custom Action</button>
         </form>
     </div>
@@ -485,13 +567,12 @@
     <div class="card reward-system">
         <h2>My Rewards</h2>
         <form id="add-reward-form">
-            <input type="text" id="new-reward-name" placeholder="Reward name (e.g., watch a movie)" required>
+            <input type="text" id="new-reward-name" placeholder="Reward name" required>
             <input type="number" id="new-reward-cost" placeholder="Points cost" min="1" required>
             <button class="add-reward-button" type="submit">Add Reward</button>
         </form>
         <div id="rewards-list">
             <p id="no-rewards-message" style="text-align:center; font-style:italic;">No rewards added yet.</p>
-            <!-- Rewards will be dynamically inserted here -->
         </div>
     </div>
 
@@ -511,9 +592,7 @@
                         <th>Notes</th>
                     </tr>
                 </thead>
-                <tbody id="history-body">
-                    <tr id="no-history-message"><td colspan="6" class="history-log-message">No sessions logged yet.</td></tr>
-                </tbody>
+                <tbody id="history-body"></tbody>
             </table>
         </div>
         <button class="button" id="download-history">Download History (CSV)</button>
@@ -527,22 +606,15 @@
 </div>
 
 <script>
-    // Register the service worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => console.log('Service Worker: Registered'))
-          .catch(err => console.log(`Service Worker: Error: ${err}`));
-      });
-    }
-
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- DOM Elements & Global Variables ---
+    const themeToggle = document.getElementById('checkbox');
     const pointsDisplay = document.getElementById('points-display');
     const toolCategoryButtons = document.querySelectorAll('.tool-button');
     const specificToolsSection = document.getElementById('specific-tools-section');
     const specificToolButtonsContainer = document.getElementById('specific-tool-buttons');
+    const showGuideButton = document.getElementById('show-guide-button');
     const beforeEmotionSlider = document.getElementById('before-emotion');
     const afterEmotionSlider = document.getElementById('after-emotion');
     const beforeValueDisplay = document.getElementById('before-value');
@@ -554,231 +626,167 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyBody = document.getElementById('history-body');
     const downloadHistoryButton = document.getElementById('download-history');
     const affirmationFace = document.getElementById('affirmation-face');
-    const breathingBox = document.getElementById('breathing-box');
+    const breathingCanvas = document.getElementById('breathing-canvas');
     const breathingMessage = document.getElementById('breathing-message');
-    const startBreathingButton = document.getElementById('start-breathing');
+    const toggleBreathingButton = document.getElementById('toggle-breathing-button');
     const messageBox = document.getElementById('message-box');
     const messageBoxText = document.getElementById('message-box-text');
     const addRewardForm = document.getElementById('add-reward-form');
-    const newRewardNameInput = document.getElementById('new-reward-name');
-    const newRewardCostInput = document.getElementById('new-reward-cost');
     const rewardsList = document.getElementById('rewards-list');
 
-    let selectedCategory = null;
     let selectedTool = null;
     let sessionHistory = [];
     let rewards = [];
     let totalPoints = 0;
+    let isBreathing = false;
+    let breathingIntervalId = null;
     const historyStorageKey = 'dbt-companion-history';
     const rewardsStorageKey = 'dbt-companion-rewards';
     const pointsStorageKey = 'dbt-companion-points';
+    const themeStorageKey = 'dbt-companion-theme';
 
-    // --- DBT Tools Data ---
-    const dbtTools = {
-        'Mindfulness': [
-            'Observe', 'Describe', 'Participate', 'One-Mindfully',
-            'Non-Judgmentally', 'Effectively', 'Wise Mind'
-        ],
-        'Emotional Regulation': [
-            'CHECK THE FACTS', 'Opposite Action', 'Problem Solving',
-            'Accumulating Positive Emotions', 'Build Mastery',
-            'Cope Ahead', 'Vulnerability Reduction'
-        ],
-        'Distress Tolerance': [
-            'TIP Skill (Temperature, Intense Exercise, Paced Breathing)',
-            'ACCEPTS (Activities, Contributing, Comparisons, Emotions, Pushing Away, Thoughts, Sensations)',
-            'IMPROVE (Imagery, Meaning, Prayer, Relaxation, One Thing, Vacation, Encouragement)',
-            'Pros and Cons', 'Radical Acceptance', 'Turning the Mind'
-        ]
+    // --- Data (will be populated later) ---
+    const dbtTools = {};
+    const dbtToolGuides = {};
+    const affirmations = [];
+
+    // --- Three.js Breathing Animation Variables ---
+    let scene, camera, renderer, sphere;
+    let breathingPhase = 'hold_small'; // inhale, hold_big, exhale, hold_small
+    let phaseProgress = 0; // 0 to 1
+    const phaseDuration = 4; // seconds
+    const clock = new THREE.Clock();
+    const minScale = 1.0;
+    const maxScale = 1.5;
+    const colors = {
+        inhale: new THREE.Color(0x63b3ed),     // Blue
+        hold_big: new THREE.Color(0x9f7aea),  // Purple
+        exhale: new THREE.Color(0x48bb78),    // Green
+        hold_small: new THREE.Color(0xa0aec0) // Gray
     };
 
-    // --- Affirmations Data ---
-    const affirmations = [
-        "Your feelings are valid, no matter what they are.",
-        "It's okay to need a break. You are not lazy.",
-        "Your unique way of processing the world is a strength.",
-        "You are worthy of love and acceptance just as you are.",
-        "Sensory overload is a real thing, and it's okay to step away.",
-        "Your intuition about what you need is powerful. Listen to it.",
-        "You don't have to 'mask' to be loved or valued.",
-        "Progress isn't always linear, and that's perfectly normal.",
-        "Your brain works differently, and that's a beautiful thing.",
-        "Rest is productive. Your body and mind need it.",
-        "You are not broken. You are a complete, whole person.",
-        "It's okay to have a special interest. It brings you joy.",
-        "You have the right to set boundaries that protect your peace.",
-        "Stimming is a natural and helpful way to regulate your body.",
-        "You are the expert on your own experience.",
-        "Your unique communication style is valid and important.",
-        "You don't need to justify your needs to anyone.",
-        "Celebrate your small victories. They are significant.",
-        "Autistic joy is real and it deserves to be celebrated.",
-        "Your body's signals are important. Pay attention to them.",
-        "You're not 'too much.' You're exactly enough.",
-        "Self-compassion is a powerful tool. Be kind to yourself.",
-        "You are allowed to feel overwhelmed and to ask for help.",
-        "It's okay to have different energy levels on different days.",
-        "Your nervous system is doing its best. Be gentle with it.",
-        "There is no 'right' way to be a person.",
-        "You are learning and growing at your own pace.",
-        "Your creativity and unique perspective are invaluable.",
-        "It's okay to change your mind or your plans.",
-        "Your existence is a gift, and you deserve to feel safe and happy.",
-        "The things that make you different are what make you beautiful.",
-        "You don't have to keep up with anyone else's pace.",
-        "You are strong, even on the days you don't feel it.",
-        "Your emotional responses are valid and deserve respect.",
-        "It's okay to say 'no.' Your capacity is not limitless.",
-        "You are not defined by your diagnosis.",
-        "Letting go of perfectionism is a form of self-care.",
-        "Your inner world is a beautiful and complex place.",
-        "You have the right to space and quiet when you need it.",
-        "You are a part of a neurodiverse community, and you belong.",
-        "There is nothing wrong with you. You are wonderful.",
-        "Your sensory sensitivities are real. Honor them.",
-        "You are not a burden. Your presence is a gift.",
-        "Your perspective adds value to the world.",
-        "Your way of being is not 'less than.' It is different and valuable.",
-        "You deserve accommodation without having to fight for it.",
-        "It's okay to be unapologetically yourself.",
-        "The 'right' way to do things is the way that works for you.",
-        "You don't have to perform or pretend to fit in.",
-        "Your needs are not a flaw. They are just needs.",
-        "You are capable and resilient.",
-        "Small steps are still steps forward.",
-        "You're doing the best you can with what you have right now.",
-        "You are not your thoughts; you are the one observing them.",
-        "Let your curiosity guide you.",
-        "You have the power to create a life that works for you.",
-        "It's okay to feel joy even when things are hard.",
-        "Your boundaries are a sign of self-respect.",
-        "You are a survivor, and that is a testament to your strength.",
-        "Every emotion is temporary, like a passing cloud.",
-        "Your brain is uniquely wired, and that's incredible.",
-        "You are enough, exactly as you are today.",
-        "The world is a better place because you are in it.",
-        "It's safe to be vulnerable with those you trust.",
-        "You are a work of art, a masterpiece in progress.",
-        "Your voice matters and deserves to be heard.",
-        "You are learning to navigate your unique journey.",
-        "You don't have to be perfect to be loved.",
-        "Your self-worth is not tied to your productivity.",
-        "You deserve peace, happiness, and kindness.",
-        "You are building a life that honors your true self.",
-        "You are not alone in your experiences.",
-        "Your passions and interests are important.",
-        "Letting go of what you can't control is freedom.",
-        "It's okay to rest and recharge without guilt.",
-        "Your imagination is a beautiful space to retreat to.",
-        "You have the right to take up space and be yourself.",
-        "You are a beautiful mosaic of all your experiences.",
-        "Your empathy is a superpower.",
-        "You are capable of adapting and thriving.",
-        "Every day is a new chance to try again.",
-        "Your sensitivity is not a weakness; it's a strength.",
-        "You are not 'too much' for the right people.",
-        "Your journey is your own, and it is valid.",
-        "You can feel discomfort and still move forward.",
-        "You are not defined by your past mistakes.",
-        "Your body and mind are working hard for you. Thank them.",
-        "You are resilient and can handle difficult moments.",
-        "You deserve to be treated with compassion.",
-        "Your quiet moments are just as valuable as your social ones.",
-        "You don't have to solve everything at once.",
-        "There is strength in vulnerability.",
-        "You are loved for who you are, not what you do.",
-        "Your existence is a form of resistance and triumph.",
-        "You are the author of your own story.",
-        "It's okay to ask for what you need.",
-        "You are powerful beyond measure.",
-        "You are growing, even on the days it doesn't feel like it.",
-        "The journey of self-discovery is a sacred one.",
-        "You deserve to be celebrated for all that you are.",
-        "Be patient with yourself. You are learning.",
-        "You have a unique light to share with the world.",
-        "Your worth is inherent, not earned."
-    ];
+    // --- Initialization ---
+    function initializeApp() {
+        populateData();
+        loadTheme();
+        loadData();
+        initThreeJS();
+        attachEventListeners();
+    }
 
+    // --- Three.js Setup and Animation ---
+    function initThreeJS() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, breathingCanvas.clientWidth / breathingCanvas.clientHeight, 0.1, 1000);
+        renderer = new THREE.WebGLRenderer({ canvas: breathingCanvas, antialias: true, alpha: true });
+        renderer.setSize(breathingCanvas.clientWidth, breathingCanvas.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
 
-    // --- Core Functions ---
+        const geometry = new THREE.SphereGeometry(1, 32, 32);
+        const material = new THREE.MeshStandardMaterial({
+            color: colors.hold_small,
+            metalness: 0.3,
+            roughness: 0.4
+        });
+        sphere = new THREE.Mesh(geometry, material);
+        scene.add(sphere);
 
-    /**
-     * Loads all data (history, rewards, points) from localStorage.
-     */
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0xffffff, 0.8);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        camera.position.z = 3;
+        animate();
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const deltaTime = clock.getDelta();
+
+        if (isBreathing) {
+            phaseProgress += deltaTime / phaseDuration;
+            
+            let currentScale, startColor, endColor;
+
+            switch (breathingPhase) {
+                case 'inhale':
+                    currentScale = THREE.MathUtils.lerp(minScale, maxScale, phaseProgress);
+                    startColor = colors.hold_small;
+                    endColor = colors.inhale;
+                    break;
+                case 'hold_big':
+                    currentScale = maxScale;
+                    startColor = colors.inhale;
+                    endColor = colors.hold_big;
+                    break;
+                case 'exhale':
+                    currentScale = THREE.MathUtils.lerp(maxScale, minScale, phaseProgress);
+                    startColor = colors.hold_big;
+                    endColor = colors.exhale;
+                    break;
+                case 'hold_small':
+                    currentScale = minScale;
+                    startColor = colors.exhale;
+                    endColor = colors.hold_small;
+                    break;
+            }
+            
+            sphere.scale.set(currentScale, currentScale, currentScale);
+            sphere.material.color.lerpColors(startColor, endColor, phaseProgress);
+        }
+        
+        sphere.rotation.y += 0.001;
+        renderer.render(scene, camera);
+    }
+    
+    // --- Theme Management ---
+    function loadTheme() {
+        const isDarkMode = localStorage.getItem(themeStorageKey) === 'true';
+        themeToggle.checked = isDarkMode;
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        }
+    }
+
+    function handleThemeToggle() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem(themeStorageKey, themeToggle.checked);
+    }
+
+    // --- Core Functions (Data, Rendering, etc.) ---
     function loadData() {
-        const storedHistory = localStorage.getItem(historyStorageKey);
-        if (storedHistory) {
-            sessionHistory = JSON.parse(storedHistory);
-        }
-        
-        const storedRewards = localStorage.getItem(rewardsStorageKey);
-        if (storedRewards) {
-            rewards = JSON.parse(storedRewards);
-        }
-        
-        const storedPoints = localStorage.getItem(pointsStorageKey);
-        if (storedPoints) {
-            totalPoints = parseInt(storedPoints, 10);
-        }
-
+        sessionHistory = JSON.parse(localStorage.getItem(historyStorageKey)) || [];
+        rewards = JSON.parse(localStorage.getItem(rewardsStorageKey)) || [];
+        totalPoints = parseInt(localStorage.getItem(pointsStorageKey), 10) || 0;
         renderHistory();
         renderRewards();
         updatePointsDisplay();
     }
-
-    /**
-     * Saves all data to localStorage.
-     */
+    
     function saveData() {
         localStorage.setItem(historyStorageKey, JSON.stringify(sessionHistory));
         localStorage.setItem(rewardsStorageKey, JSON.stringify(rewards));
         localStorage.setItem(pointsStorageKey, totalPoints);
     }
-
-    /**
-     * Updates the points display on the page.
-     */
+    
     function updatePointsDisplay() {
         pointsDisplay.textContent = `Points: ${totalPoints}`;
     }
-
-    /**
-     * Calculates a session score based on emotion change and tool type.
-     * @param {string} tool - The type of tool used.
-     * @param {number} before - The emotion score before the session (0-100).
-     * @param {number} after - The emotion score after the session (0-100).
-     * @returns {number} The calculated score.
-     */
+    
     function calculateScore(tool, before, after) {
-        let baseScore = 0;
-        switch (tool) {
-            case 'Box Breathing':
-                baseScore = 100; // Fixed score for this specific exercise
-                break;
-            case 'Mindfulness':
-            case 'Emotional Regulation':
-            case 'Distress Tolerance':
-                baseScore = 50;
-                break;
-            default: // Specific tools and custom actions
-                baseScore = 50;
-                break;
-        }
-        
-        const emotionDelta = after - before;
-        const emotionBonus = Math.max(0, emotionDelta); // Only reward for positive change
+        let baseScore = 50;
+        if (tool === 'Box Breathing') baseScore = 100;
+        const emotionBonus = Math.max(0, after - before);
         return baseScore + emotionBonus;
     }
-
-    /**
-     * Renders the session history table from the sessionHistory array.
-     */
+    
     function renderHistory() {
         if (sessionHistory.length === 0) {
-            historyBody.innerHTML = `<tr id="no-history-message"><td colspan="6" class="history-log-message">No sessions logged yet.</td></tr>`;
+            historyBody.innerHTML = `<tr><td colspan="6" class="history-log-message">No sessions logged yet.</td></tr>`;
             return;
         }
-
         const html = sessionHistory.map(session => {
             const formattedDate = new Date(session.timestamp).toLocaleString();
             return `
@@ -793,21 +801,13 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
         historyBody.innerHTML = html;
-        const noMsg = document.getElementById('no-history-message');
-        if (noMsg) {
-            noMsg.style.display = 'none';
-        }
     }
-
-    /**
-     * Renders the list of rewards.
-     */
+    
     function renderRewards() {
         if (rewards.length === 0) {
             rewardsList.innerHTML = `<p id="no-rewards-message" style="text-align:center; font-style:italic;">No rewards added yet.</p>`;
             return;
         }
-
         rewardsList.innerHTML = '';
         rewards.forEach((reward, index) => {
             const rewardItem = document.createElement('div');
@@ -824,117 +824,81 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             rewardsList.appendChild(rewardItem);
         });
-
-        // Attach event listeners to the new buttons
-        document.querySelectorAll('.spend-reward').forEach(button => {
-            button.addEventListener('click', spendReward);
-        });
-        document.querySelectorAll('.delete-reward-button').forEach(button => {
-            button.addEventListener('click', deleteReward);
-        });
+        document.querySelectorAll('.spend-reward').forEach(b => b.addEventListener('click', spendReward));
+        document.querySelectorAll('.delete-reward-button').forEach(b => b.addEventListener('click', deleteReward));
     }
-
+    
     // --- Event Handlers ---
-
-    /**
-     * Handles the selection of a main DBT tool category.
-     * @param {Event} event - The button click event.
-     */
     function handleCategorySelection(event) {
         toolCategoryButtons.forEach(btn => btn.classList.remove('selected'));
         event.target.classList.add('selected');
-        
         selectedCategory = event.target.dataset.tool;
-        selectedTool = null; // Reset the specific tool selection
-        
+        selectedTool = null;
+        showGuideButton.disabled = true;
         renderSpecificTools(selectedCategory);
     }
     
-    /**
-     * Renders the specific tool buttons for the selected category.
-     * @param {string} category - The selected tool category.
-     */
     function renderSpecificTools(category) {
         const tools = dbtTools[category] || [];
-        const html = tools.map(tool => 
-            `<button class="specific-tool-button" data-tool="${tool}">${tool}</button>`
-        ).join('');
-        
-        specificToolButtonsContainer.innerHTML = html;
+        specificToolButtonsContainer.innerHTML = tools.map(tool => `<button class="specific-tool-button" data-tool="${tool}">${tool}</button>`).join('');
         specificToolsSection.classList.add('visible');
-        
-        // Attach click listeners to the newly created buttons
-        document.querySelectorAll('.specific-tool-button').forEach(button => {
-            button.addEventListener('click', handleToolSelection);
-        });
+        document.querySelectorAll('.specific-tool-button').forEach(button => button.addEventListener('click', handleToolSelection));
     }
-
-    /**
-     * Handles the selection of a specific DBT tool.
-     * @param {Event} event - The button click event.
-     */
+    
     function handleToolSelection(event) {
         document.querySelectorAll('.specific-tool-button').forEach(btn => btn.classList.remove('selected'));
         event.target.classList.add('selected');
         selectedTool = event.target.dataset.tool;
+        showGuideButton.disabled = false;
     }
-
-    /**
-     * Updates the displayed value for an emotion slider.
-     * @param {Event} event - The slider change event.
-     */
+    
+    function showToolGuide() {
+        if (selectedTool && dbtToolGuides[selectedTool]) {
+            showMessage(dbtToolGuides[selectedTool], true);
+        } else {
+            showMessage("Please select a specific tool first to see its guide.", false);
+        }
+    }
+    
     function updateSliderValue(event) {
-        const sliderId = event.target.id;
-        const value = event.target.value;
-        const displayElement = document.getElementById(sliderId.replace('emotion', 'value'));
-        displayElement.textContent = `Feeling Score: ${value}`;
+        const displayElement = event.target.id === 'before-emotion' ? beforeValueDisplay : afterValueDisplay;
+        displayElement.textContent = `Feeling Score: ${event.target.value}`;
     }
-
-    /**
-     * Logs a session based on the selected tool and emotion scores.
-     */
+    
     function logToolSession() {
         if (!selectedTool) {
             showMessage("Please select a specific DBT tool before logging.");
             return;
         }
-
         const before = parseInt(beforeEmotionSlider.value);
         const after = parseInt(afterEmotionSlider.value);
         const score = calculateScore(selectedTool, before, after);
-
         totalPoints += score;
-
-        const session = {
+        sessionHistory.unshift({
             tool: selectedTool,
             beforeEmotion: before,
             afterEmotion: after,
             score: score,
-            notes: '', // No notes for general tool logging
+            notes: '',
             timestamp: new Date().toISOString()
-        };
-
-        sessionHistory.unshift(session); // Add to the beginning
+        });
         saveData();
         renderHistory();
         updatePointsDisplay();
         showMessage(`Session logged! You earned a score of ${score}.`);
         
-        // Reset state after logging
+        // Reset form
         toolCategoryButtons.forEach(btn => btn.classList.remove('selected'));
         specificToolsSection.classList.remove('visible');
         selectedCategory = null;
         selectedTool = null;
+        showGuideButton.disabled = true;
         beforeEmotionSlider.value = 50;
         afterEmotionSlider.value = 50;
-        beforeValueDisplay.textContent = 'Feeling Score: 50';
-        afterValueDisplay.textContent = 'Feeling Score: 50';
+        updateSliderValue({ target: beforeEmotionSlider });
+        updateSliderValue({ target: afterEmotionSlider });
     }
-
-    /**
-     * Logs a custom action with notes.
-     * @param {Event} event - The form submission event.
-     */
+    
     function logCustomAction(event) {
         event.preventDefault();
         const actionName = customActionNameInput.value.trim();
@@ -942,201 +906,165 @@ document.addEventListener('DOMContentLoaded', () => {
             showMessage("Please enter a name for your custom action.");
             return;
         }
-
         const notes = customActionNotesInput.value.trim();
-        const score = 25; // Fixed score for custom actions
-
+        const score = 25;
         totalPoints += score;
-
-        const session = {
+        sessionHistory.unshift({
             tool: actionName,
             beforeEmotion: '-',
             afterEmotion: '-',
             score: score,
             notes: notes || '-',
             timestamp: new Date().toISOString()
-        };
-
-        sessionHistory.unshift(session);
+        });
         saveData();
         renderHistory();
         updatePointsDisplay();
         showMessage(`Custom action logged! You earned a score of ${score}.`);
-
-        // Clear the form
         customActionForm.reset();
     }
-
-    /**
-     * Handles the submission of the add reward form.
-     * @param {Event} event - The form submission event.
-     */
+    
     function addReward(event) {
         event.preventDefault();
         const name = newRewardNameInput.value.trim();
         const cost = parseInt(newRewardCostInput.value, 10);
-        
         if (!name || isNaN(cost) || cost <= 0) {
             showMessage("Please enter a valid reward name and a positive points cost.");
             return;
         }
-        
         rewards.push({ name, cost });
         saveData();
         renderRewards();
         showMessage(`Reward "${name}" added!`);
-        
-        // Clear the form
         addRewardForm.reset();
     }
     
-    /**
-     * Handles the spending of a reward.
-     * @param {Event} event - The button click event.
-     */
     function spendReward(event) {
         const index = event.target.dataset.index;
         const reward = rewards[index];
-        
         if (totalPoints >= reward.cost) {
             totalPoints -= reward.cost;
             saveData();
             updatePointsDisplay();
             showMessage(`You spent ${reward.cost} points on: "${reward.name}". Enjoy your reward!`);
         } else {
-            showMessage(`You don't have enough points for that reward. You need ${reward.cost} points, but you only have ${totalPoints}.`);
+            showMessage(`You don't have enough points. You need ${reward.cost}, but you have ${totalPoints}.`);
         }
     }
     
-    /**
-     * Handles the deletion of a reward.
-     * @param {Event} event - The button click event.
-     */
     function deleteReward(event) {
         const index = event.target.dataset.index;
         const rewardName = rewards[index].name;
-        
         rewards.splice(index, 1);
         saveData();
         renderRewards();
         showMessage(`Reward "${rewardName}" has been deleted.`);
     }
-
-    /**
-     * Triggers the download of the session history as a CSV file.
-     */
+    
     function downloadHistory() {
         if (sessionHistory.length === 0) {
             showMessage("No history to download yet!");
             return;
         }
-
         const headers = ["Timestamp", "Tool", "Before Emotion", "After Emotion", "Score", "Notes"];
-        const rows = sessionHistory.map(session => {
-            return [
-                `"${new Date(session.timestamp).toLocaleString()}"`, // Wrap in quotes to handle commas
-                `"${session.tool}"`,
-                `"${session.beforeEmotion}"`,
-                `"${session.afterEmotion}"`,
-                `"${session.score}"`,
-                `"${session.notes.replace(/"/g, '""')}"` // Escape double quotes
-            ].join(',');
-        });
-
-        const csvContent = [
-            headers.join(','),
-            ...rows
-        ].join('\n');
-
+        const rows = sessionHistory.map(s => [
+            `"${new Date(s.timestamp).toLocaleString()}"`,
+            `"${s.tool}"`, `"${s.beforeEmotion}"`, `"${s.afterEmotion}"`, `"${s.score}"`,
+            `"${(s.notes || '').replace(/"/g, '""')}"`
+        ].join(','));
+        const csvContent = [headers.join(','), ...rows].join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", "dbt_companion_history.csv");
-        link.style.display = 'none';
-        document.body.appendChild(link);
+        link.href = URL.createObjectURL(blob);
+        link.download = "dbt_companion_history.csv";
         link.click();
-        document.body.removeChild(link);
-        showMessage("History download started!");
+        URL.revokeObjectURL(link.href);
     }
     
-    /**
-     * Handles the Box Breathing animation and logging.
-     */
-    function startBreathing() {
-        startBreathingButton.disabled = true;
-        breathingMessage.textContent = "Inhale...";
-        breathingBox.classList.add('animate');
-        
-        let phase = 0;
-        const phases = [
-            { text: "Inhale...", time: 4000 },
-            { text: "Hold...", time: 4000 },
-            { text: "Exhale...", time: 4000 },
-            { text: "Hold...", time: 4000 }
-        ];
-        
-        const intervalId = setInterval(() => {
-            phase = (phase + 1) % 4;
-            breathingMessage.textContent = phases[phase].text;
-        }, 4000);
-        
-        // Stop animation after one cycle (16 seconds)
-        setTimeout(() => {
-            clearInterval(intervalId);
-            breathingBox.classList.remove('animate');
-            breathingMessage.textContent = "Great job! Session complete.";
-            startBreathingButton.disabled = false;
+    function toggleBreathing() {
+        isBreathing = !isBreathing;
+        if (isBreathing) {
+            toggleBreathingButton.textContent = "Stop Breathing";
+            const phases = ['inhale', 'hold_big', 'exhale', 'hold_small'];
+            const messages = ["Inhale...", "Hold...", "Exhale...", "Hold..."];
+            let phaseIndex = 0;
             
-            const session = {
-                tool: 'Box Breathing',
-                beforeEmotion: '-',
-                afterEmotion: '-',
-                score: 100, // Fixed score for completing the exercise
-                notes: 'Completed a box breathing session.',
-                timestamp: new Date().toISOString()
+            const startNextPhase = () => {
+                breathingPhase = phases[phaseIndex];
+                breathingMessage.textContent = messages[phaseIndex];
+                phaseProgress = 0;
+                phaseIndex = (phaseIndex + 1) % 4;
             };
             
-            totalPoints += session.score;
-            sessionHistory.unshift(session);
+            startNextPhase();
+            breathingIntervalId = setInterval(startNextPhase, phaseDuration * 1000);
+
+        } else {
+            toggleBreathingButton.textContent = "Start Breathing";
+            clearInterval(breathingIntervalId);
+            breathingIntervalId = null;
+            breathingPhase = 'hold_small';
+            sphere.material.color.set(colors.hold_small);
+            sphere.scale.set(minScale, minScale, minScale);
+            
+            breathingMessage.textContent = "Great job! Session complete.";
+            const score = 100;
+            totalPoints += score;
+            sessionHistory.unshift({
+                tool: 'Box Breathing',
+                beforeEmotion: '-', afterEmotion: '-', score,
+                notes: 'Completed a 3D breathing session.',
+                timestamp: new Date().toISOString()
+            });
             saveData();
             renderHistory();
             updatePointsDisplay();
-            showMessage("Box breathing session completed. You earned a score of 100!");
-        }, 16000);
+            showMessage(`Box breathing session logged. You earned ${score} points!`);
+        }
     }
     
-    /**
-     * Displays a random neuro-affirming affirmation.
-     */
     function showAffirmation() {
-        const randomIndex = Math.floor(Math.random() * affirmations.length);
-        const affirmation = affirmations[randomIndex];
+        const affirmation = affirmations[Math.floor(Math.random() * affirmations.length)];
         showMessage(affirmation);
     }
-
-    /**
-     * A generic message box for user feedback.
-     * @param {string} message - The message to display.
-     */
-    function showMessage(message) {
-        messageBoxText.textContent = message;
+    
+    function showMessage(message, allowHTML = false) {
+        messageBoxText[allowHTML ? 'innerHTML' : 'textContent'] = message;
         messageBox.classList.add('visible');
     }
 
     // --- Attach Event Listeners ---
-    toolCategoryButtons.forEach(button => button.addEventListener('click', handleCategorySelection));
-    beforeEmotionSlider.addEventListener('input', updateSliderValue);
-    afterEmotionSlider.addEventListener('input', updateSliderValue);
-    logSessionButton.addEventListener('click', logToolSession);
-    customActionForm.addEventListener('submit', logCustomAction);
-    downloadHistoryButton.addEventListener('click', downloadHistory);
-    affirmationFace.addEventListener('click', showAffirmation);
-    startBreathingButton.addEventListener('click', startBreathing);
-    addRewardForm.addEventListener('submit', addReward);
+    function attachEventListeners() {
+        themeToggle.addEventListener('change', handleThemeToggle);
+        toolCategoryButtons.forEach(button => button.addEventListener('click', handleCategorySelection));
+        showGuideButton.addEventListener('click', showToolGuide);
+        beforeEmotionSlider.addEventListener('input', updateSliderValue);
+        afterEmotionSlider.addEventListener('input', updateSliderValue);
+        logSessionButton.addEventListener('click', logToolSession);
+        customActionForm.addEventListener('submit', logCustomAction);
+        downloadHistoryButton.addEventListener('click', downloadHistory);
+        affirmationFace.addEventListener('click', showAffirmation);
+        toggleBreathingButton.addEventListener('click', toggleBreathing);
+        addRewardForm.addEventListener('submit', addReward);
+    }
+
+    function populateData() {
+        Object.assign(dbtTools, {
+            'Mindfulness': ['Observe', 'Describe', 'Participate', 'One-Mindfully', 'Non-Judgmentally', 'Effectively', 'Wise Mind'],
+            'Emotional Regulation': ['CHECK THE FACTS', 'Opposite Action', 'Problem Solving', 'Accumulating Positive Emotions', 'Build Mastery', 'Cope Ahead', 'Vulnerability Reduction'],
+            'Distress Tolerance': ['TIP Skill', 'ACCEPTS', 'IMPROVE', 'Pros and Cons', 'Radical Acceptance', 'Turning the Mind']
+        });
+        Object.assign(dbtToolGuides, {
+            'Observe': '<strong>Observe:</strong> Simply notice your experience without getting caught in it. Pay attention to your senses: what you see, hear, smell, taste, and feel. Notice thoughts and feelings as they come and go, like clouds in the sky.',
+            'Describe': '<strong>Describe:</strong> Put words to what you observe. Use factual, non-judgmental language.', 'Participate': '<strong>Participate:</strong> Throw yourself completely into the current moment.', 'One-Mindfully': '<strong>One-Mindfully:</strong> Do one thing at a time.', 'Non-Judgmentally': '<strong>Non-Judgmentally:</strong> See things as they are, without labeling them as "good" or "bad."', 'Effectively': '<strong>Effectively:</strong> Focus on what works.', 'Wise Mind': '<strong>Wise Mind:</strong> Find the balance between your emotional mind and your reasonable mind.', 'CHECK THE FACTS': '<strong>CHECK THE FACTS:</strong> When your emotions don\'t fit the facts of a situation, this skill helps you check if your interpretation is correct.', 'Opposite Action': '<strong>Opposite Action:</strong> When you have an unjustified emotion, act opposite to its urge.', 'Problem Solving': '<strong>Problem Solving:</strong> When you have a practical problem, use this skill to find a solution.', 'Accumulating Positive Emotions': '<strong>Accumulating Positive Emotions:</strong> Intentionally do things that bring you joy.', 'Build Mastery': '<strong>Build Mastery:</strong> Do something that makes you feel competent and effective.', 'Cope Ahead': '<strong>Cope Ahead:</strong> Rehearse a difficult situation in your mind ahead of time.', 'Vulnerability Reduction': '<strong>Vulnerability Reduction (PLEASE):</strong> Reduce your vulnerability by taking care of your body.', 'TIP Skill': '<strong>TIP Skill:</strong> Quickly change your body chemistry to reduce extreme emotional arousal.', 'ACCEPTS': '<strong>ACCEPTS:</strong> Distract yourself from painful emotions with healthy activities.', 'IMPROVE': '<strong>IMPROVE the moment:</strong> Soothe yourself in a difficult moment.', 'Pros and Cons': '<strong>Pros and Cons:</strong> Think about the advantages and disadvantages of acting on crisis urges versus resisting them.', 'Radical Acceptance': '<strong>Radical Acceptance:</strong> Completely and totally accept reality as it is.', 'Turning the Mind': '<strong>Turning the Mind:</strong> Make a conscious choice to turn your mind toward acceptance.'
+        });
+        affirmations.push(...[
+            "Your feelings are valid, no matter what they are.", "It's okay to need a break. You are not lazy.", "Your unique way of processing the world is a strength.", "You are worthy of love and acceptance just as you are.", "Sensory overload is a real thing, and it's okay to step away.", "Your intuition about what you need is powerful. Listen to it.", "You don't have to 'mask' to be loved or valued.", "Progress isn't always linear, and that's perfectly normal.", "Your brain works differently, and that's a beautiful thing.", "Rest is productive. Your body and mind need it.", "You are not broken. You are a complete, whole person."
+        ]);
+    }
 
     // Initial load
-    loadData();
+    initializeApp();
 });
 </script>
 
