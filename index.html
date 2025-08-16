@@ -819,6 +819,7 @@
                 <p id="journal-prompt" class="journal-prompt"></p>
                 <textarea id="journal-entry" rows="8" placeholder="Your reflections..."></textarea>
                 <button class="button" id="save-journal-btn" style="width:100%; margin-top: 8px;">Save Journal Entry</button>
+                <button class="button" id="view-journal-history-btn" style="width:100%; margin-top: 8px;">View Past Entries</button>
             </div>
         </section>
 
@@ -954,6 +955,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const journalPromptEl = document.getElementById('journal-prompt');
     const journalEntryInput = document.getElementById('journal-entry');
     const saveJournalBtn = document.getElementById('save-journal-btn');
+    const viewJournalHistoryBtn = document.getElementById('view-journal-history-btn');
 
     // Backup & Restore Elements
     const backupBtn = document.getElementById('backup-data-btn');
@@ -1556,6 +1558,23 @@ document.addEventListener('DOMContentLoaded', () => {
         showMessage(`Journal entry saved! You earned ${score} points.`);
         journalEntryInput.value = '';
     }
+    
+    function showJournalHistoryModal() {
+        const journalEntries = sessionHistory.filter(s => s.tool === 'Journal Entry')
+                                           .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        if (journalEntries.length === 0) {
+            showMessage("You haven't saved any journal entries yet.");
+            return;
+        }
+
+        let modalContent = '<h2>Past Journal Entries</h2>';
+        journalEntries.forEach(entry => {
+            const date = new Date(entry.timestamp).toLocaleDateString();
+            modalContent += `<h3>${date}</h3><p style="white-space: pre-wrap;">${entry.notes}</p><hr>`;
+        });
+        showMessage(modalContent, true);
+    }
 
     function backupData() {
         const dataToBackup = {
@@ -1642,6 +1661,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleBreathingButton.addEventListener('click', toggleBreathing);
         addRewardForm.addEventListener('submit', addReward);
         saveJournalBtn.addEventListener('click', saveJournalEntry);
+        viewJournalHistoryBtn.addEventListener('click', showJournalHistoryModal);
         
         // List Listeners
         todoForm.addEventListener('submit', (e) => handleListSubmit(e, todoList, todoInput, todoPointsInput, 10));
