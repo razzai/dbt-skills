@@ -84,7 +84,7 @@
             align-items: center;
         }
 
-        h1, h2 {
+        h1, h2, h3 {
             text-align: center;
             margin: 0;
             font-weight: 700;
@@ -100,6 +100,13 @@
         h2 {
             font-size: 1.5rem;
             margin-bottom: 16px;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            text-align: left;
         }
 
         .card {
@@ -133,7 +140,7 @@
             justify-content: center;
         }
 
-        .tool-button, .button, .breathing-button, .specific-tool-button, .add-reward-button {
+        .tool-button, .button, .breathing-button, .specific-tool-button, .add-reward-button, .delete-session-btn {
             background-color: var(--button-bg);
             color: white;
             border: none;
@@ -154,15 +161,24 @@
             box-shadow: none;
         }
 
-        .tool-button:hover, .button:not(:disabled):hover, .breathing-button:hover, .specific-tool-button:hover, .add-reward-button:hover {
+        .tool-button:hover, .button:not(:disabled):hover, .breathing-button:hover, .specific-tool-button:hover, .add-reward-button:hover, .delete-session-btn:hover {
             background-color: var(--button-hover);
             transform: translateY(-2px);
             box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
         }
 
-        .tool-button:active, .button:not(:disabled):active, .breathing-button:active, .specific-tool-button:active, .add-reward-button:active {
+        .tool-button:active, .button:not(:disabled):active, .breathing-button:active, .specific-tool-button:active, .add-reward-button:active, .delete-session-btn:active {
             transform: translateY(0);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .delete-session-btn {
+            background-color: var(--delete-button);
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        .delete-session-btn:hover {
+             background-color: var(--delete-hover);
         }
 
         .tool-button.selected, .specific-tool-button.selected {
@@ -380,7 +396,9 @@
             flex-direction: column;
             gap: 16px;
             text-align: center;
-            max-width: 80vw;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .message-box.visible {
@@ -436,6 +454,49 @@
             transform: translateX(24px);
         }
         
+        /* To-Do List Styles */
+        .todo-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        .todo-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .todo-list li.completed {
+            opacity: 0.6;
+        }
+        .todo-list li.completed span {
+            text-decoration: line-through;
+        }
+        .todo-list li span {
+            flex-grow: 1;
+        }
+        .todo-list input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .todo-delete-btn {
+            background: var(--delete-button);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-weight: bold;
+            line-height: 24px;
+        }
+        .todo-delete-btn:hover {
+            background: var(--delete-hover);
+        }
+
         @media (max-width: 700px) {
             .history-log table, 
             .history-log thead, 
@@ -548,7 +609,9 @@
                 <p class="value-display" id="after-value">Feeling Score: 50</p>
             </div>
         </div>
-        <button class="button" id="log-session">Log Session</button>
+        <p>4. Add some notes (optional):</p>
+        <textarea id="session-notes" placeholder="Any thoughts, feelings, or observations..."></textarea>
+        <button class="button" id="log-session" style="margin-top: 16px;">Log Session</button>
     </div>
 
     <!-- Custom Action Section -->
@@ -576,6 +639,21 @@
         </div>
     </div>
 
+    <!-- To-Do List Section -->
+    <div class="card todo-list">
+        <h2>To-Do List</h2>
+        <form id="todo-form">
+            <input type="text" id="todo-input" placeholder='E.g., "Wash one dish" or "Open email"' required>
+            <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Task</button>
+        </form>
+        
+        <h3>To Do</h3>
+        <ul id="pending-tasks"></ul>
+        
+        <h3>Completed</h3>
+        <ul id="completed-tasks"></ul>
+    </div>
+
 
     <!-- History Log Section -->
     <div class="card history-log">
@@ -590,6 +668,7 @@
                         <th>After</th>
                         <th>Score</th>
                         <th>Notes</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="history-body"></tbody>
@@ -620,6 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const beforeValueDisplay = document.getElementById('before-value');
     const afterValueDisplay = document.getElementById('after-value');
     const logSessionButton = document.getElementById('log-session');
+    const sessionNotesInput = document.getElementById('session-notes');
     const customActionForm = document.getElementById('custom-action-form');
     const customActionNameInput = document.getElementById('custom-action-name');
     const customActionNotesInput = document.getElementById('custom-action-notes');
@@ -632,18 +712,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageBox = document.getElementById('message-box');
     const messageBoxText = document.getElementById('message-box-text');
     const addRewardForm = document.getElementById('add-reward-form');
+    const newRewardNameInput = document.getElementById('new-reward-name');
+    const newRewardCostInput = document.getElementById('new-reward-cost');
     const rewardsList = document.getElementById('rewards-list');
+    const todoForm = document.getElementById('todo-form');
+    const todoInput = document.getElementById('todo-input');
+    const pendingTasksList = document.getElementById('pending-tasks');
+    const completedTasksList = document.getElementById('completed-tasks');
 
     let selectedTool = null;
     let sessionHistory = [];
     let rewards = [];
+    let todoList = [];
     let totalPoints = 0;
     let isBreathing = false;
     let breathingIntervalId = null;
+    let breathingCycleCount = 0;
     const historyStorageKey = 'dbt-companion-history';
     const rewardsStorageKey = 'dbt-companion-rewards';
     const pointsStorageKey = 'dbt-companion-points';
     const themeStorageKey = 'dbt-companion-theme';
+    const todoStorageKey = 'dbt-companion-todo';
 
     // --- Data (will be populated later) ---
     const dbtTools = {};
@@ -652,17 +741,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Three.js Breathing Animation Variables ---
     let scene, camera, renderer, sphere;
-    let breathingPhase = 'hold_small'; // inhale, hold_big, exhale, hold_small
-    let phaseProgress = 0; // 0 to 1
-    const phaseDuration = 4; // seconds
+    let breathingPhase = 'hold_small'; 
+    let phaseProgress = 0; 
+    const phaseDuration = 4; 
     const clock = new THREE.Clock();
     const minScale = 1.0;
     const maxScale = 1.5;
     const colors = {
-        inhale: new THREE.Color(0x63b3ed),     // Blue
-        hold_big: new THREE.Color(0x9f7aea),  // Purple
-        exhale: new THREE.Color(0x48bb78),    // Green
-        hold_small: new THREE.Color(0xa0aec0) // Gray
+        inhale: new THREE.Color(0x63b3ed),
+        hold_big: new THREE.Color(0x9f7aea),
+        exhale: new THREE.Color(0x48bb78),
+        hold_small: new THREE.Color(0xa0aec0)
     };
 
     // --- Initialization ---
@@ -681,22 +770,15 @@ document.addEventListener('DOMContentLoaded', () => {
         renderer = new THREE.WebGLRenderer({ canvas: breathingCanvas, antialias: true, alpha: true });
         renderer.setSize(breathingCanvas.clientWidth, breathingCanvas.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
-
         const geometry = new THREE.SphereGeometry(1, 32, 32);
-        const material = new THREE.MeshStandardMaterial({
-            color: colors.hold_small,
-            metalness: 0.3,
-            roughness: 0.4
-        });
+        const material = new THREE.MeshStandardMaterial({ color: colors.hold_small, metalness: 0.3, roughness: 0.4 });
         sphere = new THREE.Mesh(geometry, material);
         scene.add(sphere);
-
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
         const pointLight = new THREE.PointLight(0xffffff, 0.8);
         pointLight.position.set(5, 5, 5);
         scene.add(pointLight);
-
         camera.position.z = 3;
         animate();
     }
@@ -704,39 +786,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function animate() {
         requestAnimationFrame(animate);
         const deltaTime = clock.getDelta();
-
         if (isBreathing) {
             phaseProgress += deltaTime / phaseDuration;
-            
             let currentScale, startColor, endColor;
-
             switch (breathingPhase) {
-                case 'inhale':
-                    currentScale = THREE.MathUtils.lerp(minScale, maxScale, phaseProgress);
-                    startColor = colors.hold_small;
-                    endColor = colors.inhale;
-                    break;
-                case 'hold_big':
-                    currentScale = maxScale;
-                    startColor = colors.inhale;
-                    endColor = colors.hold_big;
-                    break;
-                case 'exhale':
-                    currentScale = THREE.MathUtils.lerp(maxScale, minScale, phaseProgress);
-                    startColor = colors.hold_big;
-                    endColor = colors.exhale;
-                    break;
-                case 'hold_small':
-                    currentScale = minScale;
-                    startColor = colors.exhale;
-                    endColor = colors.hold_small;
-                    break;
+                case 'inhale': currentScale = THREE.MathUtils.lerp(minScale, maxScale, phaseProgress); startColor = colors.hold_small; endColor = colors.inhale; break;
+                case 'hold_big': currentScale = maxScale; startColor = colors.inhale; endColor = colors.hold_big; break;
+                case 'exhale': currentScale = THREE.MathUtils.lerp(maxScale, minScale, phaseProgress); startColor = colors.hold_big; endColor = colors.exhale; break;
+                case 'hold_small': currentScale = minScale; startColor = colors.exhale; endColor = colors.hold_small; break;
             }
-            
             sphere.scale.set(currentScale, currentScale, currentScale);
             sphere.material.color.lerpColors(startColor, endColor, phaseProgress);
         }
-        
         sphere.rotation.y += 0.001;
         renderer.render(scene, camera);
     }
@@ -745,9 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadTheme() {
         const isDarkMode = localStorage.getItem(themeStorageKey) === 'true';
         themeToggle.checked = isDarkMode;
-        if (isDarkMode) {
-            document.body.classList.add('dark-mode');
-        }
+        if (isDarkMode) document.body.classList.add('dark-mode');
     }
 
     function handleThemeToggle() {
@@ -759,9 +818,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadData() {
         sessionHistory = JSON.parse(localStorage.getItem(historyStorageKey)) || [];
         rewards = JSON.parse(localStorage.getItem(rewardsStorageKey)) || [];
+        todoList = JSON.parse(localStorage.getItem(todoStorageKey)) || [];
         totalPoints = parseInt(localStorage.getItem(pointsStorageKey), 10) || 0;
         renderHistory();
         renderRewards();
+        renderTodoList();
         updatePointsDisplay();
     }
     
@@ -769,6 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem(historyStorageKey, JSON.stringify(sessionHistory));
         localStorage.setItem(rewardsStorageKey, JSON.stringify(rewards));
         localStorage.setItem(pointsStorageKey, totalPoints);
+        localStorage.setItem(todoStorageKey, JSON.stringify(todoList));
     }
     
     function updatePointsDisplay() {
@@ -777,14 +839,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function calculateScore(tool, before, after) {
         let baseScore = 50;
-        if (tool === 'Box Breathing') baseScore = 100;
+        if (tool === 'Box Breathing') baseScore = 25;
         const emotionBonus = Math.max(0, after - before);
         return baseScore + emotionBonus;
     }
     
     function renderHistory() {
         if (sessionHistory.length === 0) {
-            historyBody.innerHTML = `<tr><td colspan="6" class="history-log-message">No sessions logged yet.</td></tr>`;
+            historyBody.innerHTML = `<tr><td colspan="7" class="history-log-message">No sessions logged yet.</td></tr>`;
             return;
         }
         const html = sessionHistory.map(session => {
@@ -797,6 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td data-label="After">${session.afterEmotion}</td>
                     <td data-label="Score">${session.score}</td>
                     <td data-label="Notes">${session.notes || '-'}</td>
+                    <td data-label="Actions"><button class="delete-session-btn" data-timestamp="${session.timestamp}">Delete</button></td>
                 </tr>
             `;
         }).join('');
@@ -826,6 +889,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.querySelectorAll('.spend-reward').forEach(b => b.addEventListener('click', spendReward));
         document.querySelectorAll('.delete-reward-button').forEach(b => b.addEventListener('click', deleteReward));
+    }
+
+    function renderTodoList() {
+        pendingTasksList.innerHTML = '';
+        completedTasksList.innerHTML = '';
+        todoList.forEach(task => {
+            const taskItem = document.createElement('li');
+            taskItem.dataset.id = task.id;
+            taskItem.innerHTML = `
+                <input type="checkbox" ${task.completed ? 'checked' : ''}>
+                <span>${task.text}</span>
+                <button class="todo-delete-btn">X</button>
+            `;
+            if (task.completed) {
+                taskItem.classList.add('completed');
+                completedTasksList.appendChild(taskItem);
+            } else {
+                pendingTasksList.appendChild(taskItem);
+            }
+        });
     }
     
     // --- Event Handlers ---
@@ -872,6 +955,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const before = parseInt(beforeEmotionSlider.value);
         const after = parseInt(afterEmotionSlider.value);
+        const notes = sessionNotesInput.value.trim();
         const score = calculateScore(selectedTool, before, after);
         totalPoints += score;
         sessionHistory.unshift({
@@ -879,7 +963,7 @@ document.addEventListener('DOMContentLoaded', () => {
             beforeEmotion: before,
             afterEmotion: after,
             score: score,
-            notes: '',
+            notes: notes || '-',
             timestamp: new Date().toISOString()
         });
         saveData();
@@ -895,6 +979,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showGuideButton.disabled = true;
         beforeEmotionSlider.value = 50;
         afterEmotionSlider.value = 50;
+        sessionNotesInput.value = '';
         updateSliderValue({ target: beforeEmotionSlider });
         updateSliderValue({ target: afterEmotionSlider });
     }
@@ -960,6 +1045,15 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRewards();
         showMessage(`Reward "${rewardName}" has been deleted.`);
     }
+
+    function handleDeleteSession(event) {
+        if (event.target.classList.contains('delete-session-btn')) {
+            const timestampToDelete = event.target.dataset.timestamp;
+            sessionHistory = sessionHistory.filter(session => session.timestamp !== timestampToDelete);
+            saveData();
+            renderHistory();
+        }
+    }
     
     function downloadHistory() {
         if (sessionHistory.length === 0) {
@@ -984,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleBreathing() {
         isBreathing = !isBreathing;
         if (isBreathing) {
+            breathingCycleCount = 0;
             toggleBreathingButton.textContent = "Stop Breathing";
             const phases = ['inhale', 'hold_big', 'exhale', 'hold_small'];
             const messages = ["Inhale...", "Hold...", "Exhale...", "Hold..."];
@@ -991,8 +1086,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const startNextPhase = () => {
                 breathingPhase = phases[phaseIndex];
-                breathingMessage.textContent = messages[phaseIndex];
                 phaseProgress = 0;
+                
+                if (phaseIndex === 0) { // Start of a new cycle
+                    breathingCycleCount++;
+                }
+                breathingMessage.textContent = `${messages[phaseIndex]} (Cycle: ${breathingCycleCount})`;
                 phaseIndex = (phaseIndex + 1) % 4;
             };
             
@@ -1007,22 +1106,61 @@ document.addEventListener('DOMContentLoaded', () => {
             sphere.material.color.set(colors.hold_small);
             sphere.scale.set(minScale, minScale, minScale);
             
-            breathingMessage.textContent = "Great job! Session complete.";
-            const score = 100;
-            totalPoints += score;
-            sessionHistory.unshift({
-                tool: 'Box Breathing',
-                beforeEmotion: '-', afterEmotion: '-', score,
-                notes: 'Completed a 3D breathing session.',
-                timestamp: new Date().toISOString()
-            });
-            saveData();
-            renderHistory();
-            updatePointsDisplay();
-            showMessage(`Box breathing session logged. You earned ${score} points!`);
+            if (breathingCycleCount >= 5) {
+                const score = 25;
+                totalPoints += score;
+                sessionHistory.unshift({
+                    tool: 'Box Breathing',
+                    beforeEmotion: '-', afterEmotion: '-', score,
+                    notes: `Completed ${breathingCycleCount} breathing cycles.`,
+                    timestamp: new Date().toISOString()
+                });
+                saveData();
+                renderHistory();
+                updatePointsDisplay();
+                showMessage(`Great job! You completed ${breathingCycleCount} cycles and earned ${score} points!`);
+            } else {
+                 showMessage(`Session stopped. Complete 5 cycles to earn points.`);
+            }
+            breathingMessage.textContent = "Click below to begin.";
         }
     }
     
+    function handleTodoSubmit(event) {
+        event.preventDefault();
+        const text = todoInput.value.trim();
+        if (text) {
+            todoList.push({ text, completed: false, id: Date.now() });
+            saveData();
+            renderTodoList();
+            todoInput.value = '';
+        }
+    }
+    
+    function handleTodoListClick(event) {
+        const target = event.target;
+        const taskItem = target.closest('li');
+        if (!taskItem) return;
+        
+        const taskId = Number(taskItem.dataset.id);
+        const task = todoList.find(t => t.id === taskId);
+
+        if (target.type === 'checkbox') {
+            task.completed = target.checked;
+            if (task.completed) {
+                totalPoints += 10;
+                updatePointsDisplay();
+                showMessage("Task complete! You earned 10 points!");
+            }
+            saveData();
+            renderTodoList();
+        } else if (target.classList.contains('todo-delete-btn')) {
+            todoList = todoList.filter(t => t.id !== taskId);
+            saveData();
+            renderTodoList();
+        }
+    }
+
     function showAffirmation() {
         const affirmation = affirmations[Math.floor(Math.random() * affirmations.length)];
         showMessage(affirmation);
@@ -1043,9 +1181,13 @@ document.addEventListener('DOMContentLoaded', () => {
         logSessionButton.addEventListener('click', logToolSession);
         customActionForm.addEventListener('submit', logCustomAction);
         downloadHistoryButton.addEventListener('click', downloadHistory);
+        historyBody.addEventListener('click', handleDeleteSession);
         affirmationFace.addEventListener('click', showAffirmation);
         toggleBreathingButton.addEventListener('click', toggleBreathing);
         addRewardForm.addEventListener('submit', addReward);
+        todoForm.addEventListener('submit', handleTodoSubmit);
+        pendingTasksList.addEventListener('click', handleTodoListClick);
+        completedTasksList.addEventListener('click', handleTodoListClick);
     }
 
     function populateData() {
@@ -1055,8 +1197,26 @@ document.addEventListener('DOMContentLoaded', () => {
             'Distress Tolerance': ['TIP Skill', 'ACCEPTS', 'IMPROVE', 'Pros and Cons', 'Radical Acceptance', 'Turning the Mind']
         });
         Object.assign(dbtToolGuides, {
-            'Observe': '<strong>Observe:</strong> Simply notice your experience without getting caught in it. Pay attention to your senses: what you see, hear, smell, taste, and feel. Notice thoughts and feelings as they come and go, like clouds in the sky.',
-            'Describe': '<strong>Describe:</strong> Put words to what you observe. Use factual, non-judgmental language.', 'Participate': '<strong>Participate:</strong> Throw yourself completely into the current moment.', 'One-Mindfully': '<strong>One-Mindfully:</strong> Do one thing at a time.', 'Non-Judgmentally': '<strong>Non-Judgmentally:</strong> See things as they are, without labeling them as "good" or "bad."', 'Effectively': '<strong>Effectively:</strong> Focus on what works.', 'Wise Mind': '<strong>Wise Mind:</strong> Find the balance between your emotional mind and your reasonable mind.', 'CHECK THE FACTS': '<strong>CHECK THE FACTS:</strong> When your emotions don\'t fit the facts of a situation, this skill helps you check if your interpretation is correct.', 'Opposite Action': '<strong>Opposite Action:</strong> When you have an unjustified emotion, act opposite to its urge.', 'Problem Solving': '<strong>Problem Solving:</strong> When you have a practical problem, use this skill to find a solution.', 'Accumulating Positive Emotions': '<strong>Accumulating Positive Emotions:</strong> Intentionally do things that bring you joy.', 'Build Mastery': '<strong>Build Mastery:</strong> Do something that makes you feel competent and effective.', 'Cope Ahead': '<strong>Cope Ahead:</strong> Rehearse a difficult situation in your mind ahead of time.', 'Vulnerability Reduction': '<strong>Vulnerability Reduction (PLEASE):</strong> Reduce your vulnerability by taking care of your body.', 'TIP Skill': '<strong>TIP Skill:</strong> Quickly change your body chemistry to reduce extreme emotional arousal.', 'ACCEPTS': '<strong>ACCEPTS:</strong> Distract yourself from painful emotions with healthy activities.', 'IMPROVE': '<strong>IMPROVE the moment:</strong> Soothe yourself in a difficult moment.', 'Pros and Cons': '<strong>Pros and Cons:</strong> Think about the advantages and disadvantages of acting on crisis urges versus resisting them.', 'Radical Acceptance': '<strong>Radical Acceptance:</strong> Completely and totally accept reality as it is.', 'Turning the Mind': '<strong>Turning the Mind:</strong> Make a conscious choice to turn your mind toward acceptance.'
+            'Observe': '<strong>Observe:</strong> This is the foundational "What" skill of mindfulness. The goal is to simply notice your experience without getting caught up in it. Pay attention to your five senses: what can you see, hear, smell, taste, and feel right now? Also, notice the thoughts, emotions, and urges that arise within you. Imagine them as clouds passing in the sky or leaves floating down a stream—just watch them come and go without judging or pushing them away.',
+            'Describe': '<strong>Describe:</strong> This is the second "What" skill. After observing a thought or feeling, put words to it. Use factual, non-judgmental language. For example, instead of saying "I\'m so angry," you might describe it as: "I feel heat in my face, my fists are clenched, and the thought \'this is unfair\' is in my mind." This creates distance and reduces the intensity of the emotion.',
+            'Participate': '<strong>Participate:</strong> This is the third "What" skill. It means throwing yourself completely into the current moment, becoming one with your activity. When you are walking, just walk. Feel the ground beneath your feet. When you are eating, just eat, noticing the flavors and textures. This skill helps you get out of your head and into your life, reducing self-consciousness and worry.',
+            'One-Mindfully': '<strong>One-Mindfully:</strong> This is a "How" skill. It means doing one thing at a time and giving it your full attention. In a world full of distractions, this is a powerful practice. If you are talking to someone, put your phone away and just listen. If you are working, focus only on the task at hand. When your mind wanders (which it will), gently guide it back. This reduces stress and increases effectiveness.',
+            'Non-Judgmentally': '<strong>Non-Judgmentally:</strong> This "How" skill involves seeing things as they are, without adding labels of "good," "bad," "right," or "wrong." Acknowledge the facts of a situation, but let go of the evaluations, blame, or criticism of yourself and others. Notice judgments as they arise and let them pass without getting attached to them. This reduces emotional suffering caused by our own evaluations.',
+            'Effectively': '<strong>Effectively:</strong> This "How" skill means focusing on what works to achieve your goals in a situation. It requires letting go of being "right" or letting pride get in the way. Ask yourself: "What do I need to do to get the result I want in this situation?" It might mean following rules you don\'t like or dealing with people you find difficult, but you do it skillfully to meet your objective.',
+            'Wise Mind': '<strong>Wise Mind:</strong> This is the core of mindfulness, representing the synthesis of your "Reasonable Mind" (logic, facts, planning) and your "Emotion Mind" (feelings, urges, intuition). Wise Mind is that deep, intuitive place within you that just *knows* what is true and right for you. It\'s a calm, centered state of knowing that you can access through practice, often by focusing on your breath and asking, "What does my Wise Mind say?"',
+            'CHECK THE FACTS': '<strong>CHECK THE FACTS:</strong> This skill is for when you have a strong emotional reaction and you need to determine if your emotion and its intensity fit the actual facts of the situation. Ask yourself: 1. What is the emotion I\'m feeling? 2. What event prompted this emotion? 3. What are my interpretations and thoughts about the event? 4. Am I assuming a threat? 5. What are the objective facts? 6. Does my emotional intensity truly fit the facts? This helps you separate your interpretation from reality.',
+            'Opposite Action': '<strong>Opposite Action:</strong> This skill is used when your emotion is unjustified by the facts, or when acting on the emotion\'s urge is not effective. You identify the urge that comes with the emotion and then do the *exact opposite*. For example, if you feel unjustified fear and the urge is to avoid, you would approach the situation. If you feel sad and the urge is to isolate, you would seek out social connection. Act opposite all the way.',
+            'Problem Solving': '<strong>Problem Solving:</strong> Use this skill when the facts of a situation are the problem, and it\'s a problem that can be solved. The steps are: 1. Define the problem and your goal. 2. Brainstorm as many solutions as possible without judging them. 3. Evaluate the pros and cons of your top solutions. 4. Pick one solution and put it into action. 5. Evaluate the result. Did it work? If not, try another solution.',
+            'Accumulating Positive Emotions': '<strong>Accumulating Positive Emotions:</strong> This is a long-term strategy to build a life you experience as worth living. Intentionally and mindfully engage in pleasant activities every day, even small ones. This builds up a reserve of positive feelings, making you more resilient to negative emotions when they arise. Plan positive events, and be fully present for them when they happen.',
+            'Build Mastery': '<strong>Build Mastery:</strong> Actively work on a skill that makes you feel competent and effective. This could be anything from learning an instrument, practicing a sport, or getting better at your job. The feeling of mastery and accomplishment is a powerful antidote to feelings of helplessness and depression. Start small and gradually increase the challenge.',
+            'Cope Ahead': '<strong>Cope Ahead:</strong> This skill helps you prepare for stressful situations you know are coming. Imagine the situation in your mind in vivid detail. Rehearse yourself coping effectively, using the DBT skills that would be most helpful. Imagine overcoming any problems that might arise. This mental rehearsal makes it more likely that you will actually cope effectively when the situation occurs.',
+            'Vulnerability Reduction (PLEASE)': '<strong>Vulnerability Reduction (PLEASE):</strong> This is about taking care of your physical well-being to reduce your vulnerability to intense negative emotions. PLEASE stands for: **PL** - Treat **P**hysica**L** illness. **E** - **E**at a balanced diet. **A** - **A**void mood-altering drugs. **S** - Get enough **S**leep. **E** - Get regular **E**xercise. Tending to these basic needs creates a strong foundation for emotional stability.',
+            'TIP Skill': '<strong>TIP Skill:</strong> This is a set of powerful, fast-acting skills to change your body chemistry and bring down extreme emotional arousal very quickly. **T** - **T**emperature: Use cold water on your face to trigger the dive reflex. **I** - **I**ntense Exercise: Engage in a short burst of intense physical activity. **P** - **P**aced Breathing: Slow your breathing way down, making your exhale longer than your inhale.',
+            'ACCEPTS': '<strong>ACCEPTS:</strong> This is a set of distraction skills to get you through a short-term crisis without making it worse. **A** - **A**ctivities (do something). **C** - **C**ontributing (do something for someone else). **C** - **C**omparisons (compare yourself to people coping the same or less well). **E** - **E**motions (create a different emotion). **P** - **P**ushing Away (temporarily block the situation from your mind). **T** - **T**houghts (force your mind to think about something else). **S** - **S**ensations (create intense physical sensations, like holding ice).',
+            'IMPROVE': '<strong>IMPROVE the moment:</strong> This is a set of self-soothing skills to make a difficult moment more tolerable. **I** - **I**magery (imagine a relaxing scene). **M** - **M**eaning (find purpose or meaning in the pain). **P** - **P**rayer (to a higher power or your own wise mind). **R** - **R**elaxation (progressive muscle relaxation, deep breathing). **O** - **O**ne thing in the moment (focus all your attention on one thing). **V** - **V**acation (take a brief break). **E** - **E**ncouragement (be your own cheerleader).',
+            'Pros and Cons': '<strong>Pros and Cons:</strong> When you are in a crisis and have strong urges to engage in destructive behavior, use this skill. Make a list of the pros and cons of acting on the urge, and a list of the pros and cons of *resisting* the urge. Think about both short-term and long-term consequences. This helps you access your Wise Mind and make a more skillful decision.',
+            'Radical Acceptance': '<strong>Radical Acceptance:</strong> This means completely and totally accepting reality as it is, with your mind, body, and spirit. Acceptance is not approval; it\'s acknowledging what is real so you can deal with it effectively. You stop fighting what you cannot change, which is the first step to reducing suffering. It\'s a choice you have to make over and over again.',
+            'Turning the Mind': '<strong>Turning the Mind:</strong> This skill goes with Radical Acceptance. It is the conscious choice to turn your mind away from rejecting reality and toward accepting it. When you find yourself thinking "this shouldn\'t be happening," you gently but firmly say "this *is* what is happening" and turn your attention to what you need to do next. It\'s a repeated action, not a one-time fix.'
         });
         affirmations.push(...[
             "Your feelings are valid, no matter what they are.", "It's okay to need a break. You are not lazy.", "Your unique way of processing the world is a strength.", "You are worthy of love and acceptance just as you are.", "Sensory overload is a real thing, and it's okay to step away.", "Your intuition about what you need is powerful. Listen to it.", "You don't have to 'mask' to be loved or valued.", "Progress isn't always linear, and that's perfectly normal.", "Your brain works differently, and that's a beautiful thing.", "Rest is productive. Your body and mind need it.", "You are not broken. You are a complete, whole person."
