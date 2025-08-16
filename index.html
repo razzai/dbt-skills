@@ -60,6 +60,7 @@
             min-height: 100vh;
             margin: 0;
             padding: 20px;
+            padding-bottom: 100px; /* Space for bottom nav */
             box-sizing: border-box;
             line-height: 1.6;
             transition: background-color 0.3s, color 0.3s;
@@ -68,20 +69,17 @@
         .container {
             width: 100%;
             max-width: 800px;
-            background-color: var(--container-bg);
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 32px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            transition: background-color 0.3s;
         }
         
         .header-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background-color: var(--container-bg);
+            padding: 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 24px;
         }
 
         h1, h2, h3 {
@@ -497,8 +495,6 @@
         .dot.active {
             background-color: var(--accent-color);
         }
-        #action-journal-swiper-track { width: 200%; }
-        #action-journal-swiper-track > .swiper-panel { width: 50%; }
         #list-swiper-track { width: 300%; }
         #list-swiper-track > .swiper-panel { width: 33.333%; }
 
@@ -578,6 +574,48 @@
             display: flex;
             gap: 12px;
         }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--container-bg);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--neutral-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .nav-btn.active {
+            color: var(--accent-color);
+        }
+        .nav-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .app-section {
+            display: none;
+            flex-direction: column;
+            gap: 24px; /* This restores the space between cards */
+        }
+        .app-section.active {
+            display: flex;
+        }
 
         @media (max-width: 700px) {
             .history-log table, 
@@ -653,188 +691,185 @@
 
     <p class="points-display" id="points-display">Points: 0</p>
 
-    <!-- Affirmation Section -->
-    <div class="card affirmation-container">
-        <h2>Need a Boost?</h2>
-        <div class="affirmation-face" id="affirmation-face">😊</div>
-        <p class="affirmation-message" id="affirmation-message">Click the face for a neuro-affirming affirmation.</p>
-    </div>
-    
-    <!-- Box Breathing Section -->
-    <div class="card box-breathing">
-        <h2>Box Breathing</h2>
-        <canvas id="breathing-canvas"></canvas>
-        <p class="breathing-message" id="breathing-message">Click below to begin.</p>
-        <button class="breathing-button" id="toggle-breathing-button">Start Breathing</button>
-    </div>
-
-    <!-- Main Tool/Emotion Logging Section -->
-    <div class="card">
-        <h2>Log a DBT Tool Session</h2>
-        
-        <div class="tool-selection">
-            <p>1. Select the tool category you used:</p>
-            <div class="tool-buttons" id="tool-category-buttons">
-                <button class="tool-button" data-tool="Mindfulness">Mindfulness</button>
-                <button class="tool-button" data-tool="Emotional Regulation">Emotional Regulation</button>
-                <button class="tool-button" data-tool="Distress Tolerance">Distress Tolerance</button>
+    <!-- App Sections -->
+    <main id="main-content">
+        <section id="home" class="app-section">
+            <!-- Affirmation Section -->
+            <div class="card affirmation-container">
+                <h2>Need a Boost?</h2>
+                <div class="affirmation-face" id="affirmation-face">😊</div>
+                <p class="affirmation-message" id="affirmation-message">Click the face for a neuro-affirming affirmation.</p>
             </div>
-        </div>
-        
-        <div class="specific-tools-section" id="specific-tools-section">
-            <p>2. Select the specific tool you used:</p>
-            <div class="specific-tool-buttons" id="specific-tool-buttons"></div>
-            <button class="button" id="show-guide-button" disabled>Show Guide</button>
-        </div>
-
-        <div class="emotion-check">
-            <p>3. How did you feel before and after?</p>
-            <div class="emotion-scale">
-                <label for="before-emotion">Before Session</label>
-                <input type="range" id="before-emotion" min="0" max="100" value="50">
-                <p class="value-display" id="before-value">Feeling Score: 50</p>
+            
+            <!-- Box Breathing Section -->
+            <div class="card box-breathing">
+                <h2>Box Breathing</h2>
+                <canvas id="breathing-canvas"></canvas>
+                <p class="breathing-message" id="breathing-message">Click below to begin.</p>
+                <button class="breathing-button" id="toggle-breathing-button">Start Breathing</button>
             </div>
-            <div class="emotion-scale">
-                <label for="after-emotion">After Session</label>
-                <input type="range" id="after-emotion" min="0" max="100" value="50">
-                <p class="value-display" id="after-value">Feeling Score: 50</p>
-            </div>
-        </div>
-        <p>4. Add some notes (optional):</p>
-        <textarea id="session-notes" placeholder="Any thoughts, feelings, or observations..."></textarea>
-        <button class="button" id="log-session" style="margin-top: 16px;">Log Session</button>
-    </div>
 
-    <!-- Action & Journal Section -->
-    <div class="card">
-        <h2 id="action-journal-title">Log a Custom Action</h2>
-        <div id="action-journal-swiper" class="swiper-container" data-title-id="action-journal-title">
-            <div id="action-journal-swiper-track" class="swiper-track">
-                <!-- Panel 1: Custom Action -->
-                <div class="swiper-panel">
-                    <form id="custom-action-form">
-                        <p>What did you do?</p>
-                        <input type="text" id="custom-action-name" placeholder="E.g., Took a walk" required>
-                        <p>Add some notes:</p>
-                        <textarea id="custom-action-notes" placeholder="Any thoughts..."></textarea>
-                        <button class="button" type="submit">Log Custom Action</button>
-                    </form>
+            <!-- Main Tool/Emotion Logging Section -->
+            <div class="card">
+                <h2>Log a DBT Tool Session</h2>
+                <div class="tool-selection">
+                    <p>1. Select the tool category you used:</p>
+                    <div class="tool-buttons" id="tool-category-buttons">
+                        <button class="tool-button" data-tool="Mindfulness">Mindfulness</button>
+                        <button class="tool-button" data-tool="Emotional Regulation">Emotional Regulation</button>
+                        <button class="tool-button" data-tool="Distress Tolerance">Distress Tolerance</button>
+                    </div>
                 </div>
-                <!-- Panel 2: Journal -->
-                <div class="swiper-panel">
-                    <h3>Daily Stoic Journal</h3>
-                    <p id="journal-prompt" class="journal-prompt"></p>
-                    <textarea id="journal-entry" rows="6" placeholder="Your reflections..."></textarea>
-                    <button class="button" id="save-journal-btn" style="width:100%; margin-top: 8px;">Save Journal Entry</button>
+                <div class="specific-tools-section" id="specific-tools-section">
+                    <p>2. Select the specific tool you used:</p>
+                    <div class="specific-tool-buttons" id="specific-tool-buttons"></div>
+                    <button class="button" id="show-guide-button" disabled>Show Guide</button>
                 </div>
+                <div class="emotion-check">
+                    <p>3. How did you feel before and after?</p>
+                    <div class="emotion-scale">
+                        <label for="before-emotion">Before Session</label>
+                        <input type="range" id="before-emotion" min="0" max="100" value="50">
+                        <p class="value-display" id="before-value">Feeling Score: 50</p>
+                    </div>
+                    <div class="emotion-scale">
+                        <label for="after-emotion">After Session</label>
+                        <input type="range" id="after-emotion" min="0" max="100" value="50">
+                        <p class="value-display" id="after-value">Feeling Score: 50</p>
+                    </div>
+                </div>
+                <p>4. Add some notes (optional):</p>
+                <textarea id="session-notes" placeholder="Any thoughts, feelings, or observations..."></textarea>
+                <button class="button" id="log-session" style="margin-top: 16px;">Log Session</button>
             </div>
-        </div>
-        <div id="action-journal-dots" class="swiper-dots">
-            <span class="dot active" data-index="0"></span>
-            <span class="dot" data-index="1"></span>
-        </div>
-    </div>
 
-    <!-- Reward System Section -->
-    <div class="card reward-system">
-        <h2>My Rewards</h2>
-        <form id="add-reward-form">
-            <input type="text" id="new-reward-name" placeholder="Reward name" required>
-            <input type="number" id="new-reward-cost" placeholder="Points cost" min="1" required>
-            <button class="add-reward-button" type="submit">Add Reward</button>
-        </form>
-        <div id="rewards-list">
-            <p id="no-rewards-message" style="text-align:center; font-style:italic;">No rewards added yet.</p>
-        </div>
-    </div>
+            <!-- Custom Action Section -->
+            <div class="card custom-action">
+                <h2>Log a Custom Action</h2>
+                <form id="custom-action-form">
+                    <p>What did you do?</p>
+                    <input type="text" id="custom-action-name" placeholder="E.g., Took a walk" required>
+                    <p>Add some notes:</p>
+                    <textarea id="custom-action-notes" placeholder="Any thoughts..."></textarea>
+                    <button class="button" type="submit">Log Custom Action</button>
+                </form>
+            </div>
+        </section>
 
-    <!-- Lists Section (Swiper) -->
-    <div class="card list">
-        <h2 id="list-title">To-Do List</h2>
-        <div id="list-swiper" class="swiper-container" data-title-id="list-title">
-            <div id="list-swiper-track" class="swiper-track">
-                <!-- Panel 1: To-Do List -->
-                <div class="swiper-panel">
-                    <form id="todo-form">
-                        <div class="list-form-inputs">
-                            <input type="text" id="todo-input" placeholder='E.g., "Wash one dish"' required>
-                            <input type="number" id="todo-points" placeholder="10" min="0">
+        <section id="lists" class="app-section">
+            <!-- Lists Section (Swiper) -->
+            <div class="card list">
+                <h2 id="list-title">To-Do List</h2>
+                <div id="list-swiper" class="swiper-container" data-title-id="list-title">
+                    <div id="list-swiper-track" class="swiper-track">
+                        <!-- Panel 1: To-Do List -->
+                        <div class="swiper-panel">
+                            <form id="todo-form">
+                                <div class="list-form-inputs">
+                                    <input type="text" id="todo-input" placeholder='E.g., "Wash one dish"' required>
+                                    <input type="number" id="todo-points" placeholder="10" min="0">
+                                </div>
+                                <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Task</button>
+                            </form>
+                            <h3>To Do</h3>
+                            <ul id="pending-tasks"></ul>
+                            <h3>Completed (Last 10)</h3>
+                            <ul id="completed-tasks"></ul>
+                            <button class="button" id="view-all-completed-btn" style="display:none;">View All Completed</button>
                         </div>
-                        <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Task</button>
-                    </form>
-                    <h3>To Do</h3>
-                    <ul id="pending-tasks"></ul>
-                    <h3>Completed (Last 10)</h3>
-                    <ul id="completed-tasks"></ul>
-                    <button class="button" id="view-all-completed-btn" style="display:none;">View All Completed</button>
-                </div>
-                <!-- Panel 2: Goals -->
-                <div class="swiper-panel">
-                    <form id="goal-form">
-                        <div class="list-form-inputs">
-                            <input type="text" id="goal-input" placeholder='E.g., "Practice mindfulness for 5 mins"' required>
-                            <input type="number" id="goal-points" placeholder="15" min="0">
+                        <!-- Panel 2: Goals -->
+                        <div class="swiper-panel">
+                            <form id="goal-form">
+                                <div class="list-form-inputs">
+                                    <input type="text" id="goal-input" placeholder='E.g., "Practice mindfulness for 5 mins"' required>
+                                    <input type="number" id="goal-points" placeholder="15" min="0">
+                                </div>
+                                <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Goal</button>
+                            </form>
+                            <h3>In Progress</h3>
+                            <ul id="pending-goals"></ul>
+                            <h3>Achieved</h3>
+                            <ul id="completed-goals"></ul>
                         </div>
-                        <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Goal</button>
-                    </form>
-                    <h3>In Progress</h3>
-                    <ul id="pending-goals"></ul>
-                    <h3>Achieved</h3>
-                    <ul id="completed-goals"></ul>
+                        <!-- Panel 3: Grocery List -->
+                        <div class="swiper-panel">
+                            <form id="grocery-form">
+                                <input type="text" id="grocery-input" placeholder='E.g., "Apples"' required>
+                                <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Item</button>
+                            </form>
+                            <h3>Needed</h3>
+                            <ul id="pending-groceries"></ul>
+                            <h3>In Cart</h3>
+                            <ul id="completed-groceries"></ul>
+                        </div>
+                    </div>
                 </div>
-                <!-- Panel 3: Grocery List -->
-                <div class="swiper-panel">
-                    <form id="grocery-form">
-                        <input type="text" id="grocery-input" placeholder='E.g., "Apples"' required>
-                        <button class="button" type="submit" style="width: 100%; margin-top: 8px;">Add Item</button>
-                    </form>
-                    <h3>Needed</h3>
-                    <ul id="pending-groceries"></ul>
-                    <h3>In Cart</h3>
-                    <ul id="completed-groceries"></ul>
+                <div id="list-swiper-dots" class="swiper-dots">
+                    <span class="dot active" data-index="0"></span>
+                    <span class="dot" data-index="1"></span>
+                    <span class="dot" data-index="2"></span>
                 </div>
             </div>
-        </div>
-        <div id="list-swiper-dots" class="swiper-dots">
-            <span class="dot active" data-index="0"></span>
-            <span class="dot" data-index="1"></span>
-            <span class="dot" data-index="2"></span>
-        </div>
-    </div>
+        </section>
 
+        <section id="journal" class="app-section">
+             <!-- Journal Section -->
+            <div class="card">
+                <h2>Daily Stoic Journal</h2>
+                <p id="journal-prompt" class="journal-prompt"></p>
+                <textarea id="journal-entry" rows="8" placeholder="Your reflections..."></textarea>
+                <button class="button" id="save-journal-btn" style="width:100%; margin-top: 8px;">Save Journal Entry</button>
+            </div>
+        </section>
 
-    <!-- History Log Section -->
-    <div class="card history-log">
-        <h2>Session History</h2>
-        <div class="history-table-container">
-            <table id="history-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Tool</th>
-                        <th>Before</th>
-                        <th>After</th>
-                        <th>Score</th>
-                        <th>Notes</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="history-body"></tbody>
-            </table>
-        </div>
-        <button class="button" id="download-history">Download History (CSV)</button>
-    </div>
+        <section id="settings" class="app-section">
+            <!-- Reward System Section -->
+            <div class="card reward-system">
+                <h2>My Rewards</h2>
+                <form id="add-reward-form">
+                    <input type="text" id="new-reward-name" placeholder="Reward name" required>
+                    <input type="number" id="new-reward-cost" placeholder="Points cost" min="1" required>
+                    <button class="add-reward-button" type="submit">Add Reward</button>
+                </form>
+                <div id="rewards-list">
+                    <p id="no-rewards-message" style="text-align:center; font-style:italic;">No rewards added yet.</p>
+                </div>
+            </div>
 
-    <!-- Backup & Restore Section -->
-    <div class="card">
-        <h2>Backup & Restore</h2>
-        <p>Save your progress to a file or restore it from a backup.</p>
-        <div class="backup-restore-buttons">
-            <button class="button" id="backup-data-btn">Backup Data</button>
-            <button class="button" id="restore-data-btn">Restore Data</button>
-            <input type="file" id="restore-file-input" style="display: none;" accept=".json">
-        </div>
-    </div>
+            <!-- History Log Section -->
+            <div class="card history-log">
+                <h2>Session History</h2>
+                <div class="history-table-container">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Tool</th>
+                                <th>Before</th>
+                                <th>After</th>
+                                <th>Score</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body"></tbody>
+                    </table>
+                </div>
+                <button class="button" id="download-history">Download History (CSV)</button>
+            </div>
+
+            <!-- Backup & Restore Section -->
+            <div class="card">
+                <h2>Backup & Restore</h2>
+                <p>Save your progress to a file or restore it from a backup.</p>
+                <div class="backup-restore-buttons">
+                    <button class="button" id="backup-data-btn">Backup Data</button>
+                    <button class="button" id="restore-data-btn">Restore Data</button>
+                    <input type="file" id="restore-file-input" style="display: none;" accept=".json">
+                </div>
+            </div>
+        </section>
+    </main>
 </div>
 
 <!-- Message Box -->
@@ -842,6 +877,25 @@
     <p class="message-box-text" id="message-box-text"></p>
     <button class="button" onclick="document.getElementById('message-box').classList.remove('visible')">Close</button>
 </div>
+
+<nav class="bottom-nav">
+    <button class="nav-btn active" data-section="home">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span>Home</span>
+    </button>
+    <button class="nav-btn" data-section="lists">
+        <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zm0-12v2h14V7H7z"/></svg>
+        <span>Lists</span>
+    </button>
+    <button class="nav-btn" data-section="journal">
+        <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
+        <span>Journal</span>
+    </button>
+    <button class="nav-btn" data-section="settings">
+        <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+        <span>Settings</span>
+    </button>
+</nav>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -896,11 +950,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pendingGroceriesList = document.getElementById('pending-groceries');
     const completedGroceriesList = document.getElementById('completed-groceries');
     
-    // Action/Journal Swiper Elements
-    const actionJournalTitle = document.getElementById('action-journal-title');
-    const actionJournalSwiperContainer = document.getElementById('action-journal-swiper');
-    const actionJournalSwiperTrack = document.getElementById('action-journal-swiper-track');
-    const actionJournalSwiperDots = document.querySelectorAll('#action-journal-dots .dot');
+    // Journal Elements
     const journalPromptEl = document.getElementById('journal-prompt');
     const journalEntryInput = document.getElementById('journal-entry');
     const saveJournalBtn = document.getElementById('save-journal-btn');
@@ -912,6 +962,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const backupReminder = document.getElementById('backup-reminder');
     const backupReminderBtn = document.getElementById('backup-reminder-btn');
     const dismissReminderBtn = document.getElementById('dismiss-reminder-btn');
+
+    // Navigation Elements
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const appSections = document.querySelectorAll('.app-section');
 
     let selectedTool = null;
     let sessionHistory = [];
@@ -956,10 +1010,22 @@ document.addEventListener('DOMContentLoaded', () => {
         populateData();
         loadTheme();
         loadData();
+        showSection('home'); // Show home section by default BEFORE initializing three.js
         initThreeJS();
         displayDailyPrompt();
         checkBackupReminder();
         attachEventListeners();
+    }
+
+    // --- Navigation ---
+    function showSection(sectionId) {
+        appSections.forEach(section => {
+            section.classList.toggle('active', section.id === sectionId);
+        });
+        navButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.section === sectionId);
+        });
+        window.scrollTo(0, 0); // Scroll to top on section change
     }
 
     // --- Three.js Setup and Animation ---
@@ -1003,9 +1069,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Theme Management ---
     function loadTheme() {
-        const isDarkMode = localStorage.getItem(themeStorageKey) === 'true';
-        themeToggle.checked = isDarkMode;
-        if (isDarkMode) document.body.classList.add('dark-mode');
+        // Default to dark mode unless light mode is explicitly saved
+        const isLightMode = localStorage.getItem(themeStorageKey) === 'false';
+        if (!isLightMode) {
+            document.body.classList.add('dark-mode');
+            themeToggle.checked = true;
+        } else {
+            document.body.classList.remove('dark-mode');
+            themeToggle.checked = false;
+        }
     }
 
     function handleThemeToggle() {
@@ -1425,7 +1497,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let touchStartX = 0;
         const titles = {
             'list-title': ["To-Do List", "Goals", "Grocery List"],
-            'action-journal-title': ["Log a Custom Action", "Daily Stoic Journal"]
         };
 
         function goToPanel(index) {
@@ -1587,7 +1658,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Swiper Setup
         setupSwiper(listSwiperContainer, listSwiperTrack, listSwiperDots, 3, listTitle);
-        setupSwiper(actionJournalSwiperContainer, actionJournalSwiperTrack, actionJournalSwiperDots, 2, actionJournalTitle);
+        
+        // Navigation Listeners
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', () => showSection(btn.dataset.section));
+        });
 
         // Backup & Restore Listeners
         backupBtn.addEventListener('click', backupData);
