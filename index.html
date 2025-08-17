@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My DBT Companion</title>
+    <title>A Life Worth Living</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
@@ -13,8 +13,8 @@
         :root {
             /* Light Mode (Default) */
             --bg-color: #f0f4f8;
-            --container-bg: #ffffff;
-            --card-bg: #f7fafc;
+            --container-bg: rgba(255, 255, 255, 0.85);
+            --card-bg: rgba(247, 250, 252, 0.85);
             --text-color: #334e68;
             --heading-color: #102a43;
             --accent-color: #5d9cec;
@@ -34,8 +34,8 @@
         body.dark-mode {
             /* Dark Mode */
             --bg-color: #1a202c;
-            --container-bg: #2d3748;
-            --card-bg: #4a5568;
+            --container-bg: rgba(45, 55, 72, 0.85);
+            --card-bg: rgba(74, 85, 104, 0.85);
             --text-color: #e2e8f0;
             --heading-color: #f7fafc;
             --accent-color: #63b3ed;
@@ -66,9 +66,19 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
         .container {
             width: 100%;
             max-width: 800px;
+            z-index: 1;
         }
         
         .header-container {
@@ -76,6 +86,8 @@
             justify-content: space-between;
             align-items: center;
             background-color: var(--container-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 24px;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
@@ -109,6 +121,8 @@
 
         .card {
             background-color: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
             padding: 24px;
@@ -582,6 +596,8 @@
             left: 0;
             width: 100%;
             background-color: var(--container-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-around;
@@ -669,10 +685,10 @@
     </style>
 </head>
 <body>
-
+<canvas id="background-canvas"></canvas>
 <div class="container">
     <div class="header-container">
-        <h1>My DBT Companion</h1>
+        <h1>A Life Worth Living</h1>
         <div class="theme-switch-wrapper">
             <label class="theme-switch" for="checkbox">
                 <input type="checkbox" id="checkbox" />
@@ -968,6 +984,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Navigation Elements
     const navButtons = document.querySelectorAll('.nav-btn');
     const appSections = document.querySelectorAll('.app-section');
+    const backgroundCanvas = document.getElementById('background-canvas');
 
     let selectedTool = null;
     let sessionHistory = [];
@@ -994,6 +1011,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Three.js Variables ---
     let scene, camera, renderer, sphere;
+    let bgScene, bgCamera, bgRenderer, bgPlane;
+    let bgUniforms;
     let breathingPhase = 'hold_small'; 
     let phaseProgress = 0; 
     const phaseDuration = 4; 
@@ -1010,9 +1029,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initialization ---
     function initializeApp() {
         populateData();
+        initBackgroundAnimation(); // Initialize background first
         loadTheme();
         loadData();
-        showSection('home'); // Show home section by default BEFORE initializing three.js
+        showSection('home');
         initThreeJS();
         displayDailyPrompt();
         checkBackupReminder();
@@ -1027,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', () => {
         navButtons.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.section === sectionId);
         });
-        window.scrollTo(0, 0); // Scroll to top on section change
+        window.scrollTo(0, 0);
     }
 
     // --- Three.js Setup and Animation ---
@@ -1049,12 +1069,79 @@ document.addEventListener('DOMContentLoaded', () => {
         camera.position.z = 3;
         animate();
     }
+    
+    function initBackgroundAnimation() {
+        bgScene = new THREE.Scene();
+        bgCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+        bgRenderer = new THREE.WebGLRenderer({ canvas: backgroundCanvas, antialias: true });
+        bgRenderer.setSize(window.innerWidth, window.innerHeight);
+        bgRenderer.setPixelRatio(window.devicePixelRatio);
+
+        bgUniforms = {
+            u_time: { type: 'f', value: 1.0 },
+            u_resolution: { type: 'v2', value: new THREE.Vector2() },
+            u_color1: { type: 'c', value: new THREE.Color(0x5d9cec) },
+            u_color2: { type: 'c', value: new THREE.Color(0x7cb9e8) },
+        };
+
+        const bgGeometry = new THREE.PlaneGeometry(2, 2);
+        const bgMaterial = new THREE.ShaderMaterial({
+            uniforms: bgUniforms,
+            vertexShader: `void main() { gl_Position = vec4(position, 1.0); }`,
+            fragmentShader: `
+                uniform vec2 u_resolution;
+                uniform float u_time;
+                uniform vec3 u_color1;
+                uniform vec3 u_color2;
+                void main() {
+                    vec2 st = gl_FragCoord.xy/u_resolution.xy;
+                    float time = u_time * 0.1;
+                    vec2 p = st * 5.0 - vec2(10.0);
+                    vec2 i = p;
+                    float c = 1.0;
+                    float inten = .05;
+                    for (int n = 0; n < 5; n++) {
+                        float t = time * (1.0 - (3.0 / float(n+1)));
+                        i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
+                        c += 1.0/length(vec2(p.x / (sin(i.x+t)/inten),p.y / (cos(i.y+t)/inten)));
+                    }
+                    c /= 5.0;
+                    c = 1.5 - sqrt(c);
+                    vec3 color = mix(u_color1, u_color2, smoothstep(0.0, 1.0, c));
+                    gl_FragColor = vec4(color, 1.0);
+                }`
+        });
+
+        bgPlane = new THREE.Mesh(bgGeometry, bgMaterial);
+        bgScene.add(bgPlane);
+        bgCamera.position.z = 1;
+
+        onWindowResize();
+        window.addEventListener('resize', onWindowResize, false);
+        animateBackground();
+    }
+    
+    function onWindowResize() {
+        bgRenderer.setSize(window.innerWidth, window.innerHeight);
+        bgUniforms.u_resolution.value.x = bgRenderer.domElement.width;
+        bgUniforms.u_resolution.value.y = bgRenderer.domElement.height;
+    }
 
     function animate() {
         requestAnimationFrame(animate);
         const deltaTime = clock.getDelta();
         if (isBreathing) {
             phaseProgress += deltaTime / phaseDuration;
+            if (phaseProgress >= 1.0) {
+                phaseProgress -= 1.0; // Use remainder for smooth transition
+                phaseIndex = (phaseIndex + 1) % 4;
+                breathingPhase = phases[phaseIndex];
+                
+                if (phaseIndex === 0) { // A new cycle begins with 'inhale'
+                    breathingCycleCount++;
+                }
+                breathingMessage.textContent = `${messages[phaseIndex]} (Cycle: ${breathingCycleCount})`;
+            }
             let currentScale, startColor, endColor;
             switch (breathingPhase) {
                 case 'inhale': currentScale = THREE.MathUtils.lerp(minScale, maxScale, phaseProgress); startColor = colors.hold_small; endColor = colors.inhale; break;
@@ -1069,6 +1156,12 @@ document.addEventListener('DOMContentLoaded', () => {
         renderer.render(scene, camera);
     }
     
+    function animateBackground() {
+        requestAnimationFrame(animateBackground);
+        bgUniforms.u_time.value += 0.01; // Slowed down for subtlety
+        bgRenderer.render(bgScene, bgCamera);
+    }
+    
     // --- Theme Management ---
     function loadTheme() {
         // Default to dark mode unless light mode is explicitly saved
@@ -1076,15 +1169,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isLightMode) {
             document.body.classList.add('dark-mode');
             themeToggle.checked = true;
+            bgUniforms.u_color1.value.set(0x1a202c);
+            bgUniforms.u_color2.value.set(0x2c5282);
         } else {
             document.body.classList.remove('dark-mode');
             themeToggle.checked = false;
+            bgUniforms.u_color1.value.set(0x5d9cec);
+            bgUniforms.u_color2.value.set(0x7cb9e8);
         }
     }
 
     function handleThemeToggle() {
         document.body.classList.toggle('dark-mode');
         localStorage.setItem(themeStorageKey, themeToggle.checked);
+        if (themeToggle.checked) {
+            bgUniforms.u_color1.value.set(0x1a202c);
+            bgUniforms.u_color2.value.set(0x2c5282);
+        } else {
+            bgUniforms.u_color1.value.set(0x5d9cec);
+            bgUniforms.u_color2.value.set(0x7cb9e8);
+        }
     }
 
     // --- Core Functions (Data, Rendering, etc.) ---
